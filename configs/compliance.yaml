@@ -1,0 +1,43 @@
+# Contractual and residency facts per provider deployment. These are hard
+# filters: a provider whose jurisdiction is outside a request's residency
+# list, or that lacks a BAA when one is required, is never routed to, never
+# shadowed, and never used as a judge for that data.
+#
+# Every value is a ${NAME} reference resolved at start-up because the facts
+# belong to each customer's contracts and chosen regions, not to this code.
+# A provider missing from this file is excluded (fail closed).
+#   jurisdiction         legal residency code, e.g. US, EU, UK, CA
+#   region               cloud region of the endpoint
+#   baa                  true only where a signed BAA covers this deployment
+#   zero_data_retention  true only where the vendor contractually retains nothing
+providers:
+  azure-gpt:
+    jurisdiction: ${AZURE_OPENAI_JURISDICTION}
+    region: ${AZURE_OPENAI_REGION}
+    baa: ${AZURE_OPENAI_BAA}
+    zero_data_retention: ${AZURE_OPENAI_ZERO_RETENTION}
+  phi:
+    jurisdiction: ${AZURE_AI_FOUNDRY_JURISDICTION}
+    region: ${AZURE_AI_FOUNDRY_REGION}
+    baa: ${AZURE_AI_FOUNDRY_BAA}
+    zero_data_retention: ${AZURE_AI_FOUNDRY_ZERO_RETENTION}
+  llama:
+    jurisdiction: ${AZURE_AI_FOUNDRY_JURISDICTION}
+    region: ${AZURE_AI_FOUNDRY_REGION}
+    baa: ${AZURE_AI_FOUNDRY_BAA}
+    zero_data_retention: ${AZURE_AI_FOUNDRY_ZERO_RETENTION}
+  claude:
+    jurisdiction: ${ANTHROPIC_JURISDICTION}
+    region: ${ANTHROPIC_REGION}
+    baa: ${ANTHROPIC_BAA}
+    zero_data_retention: ${ANTHROPIC_ZERO_RETENTION}
+  gemini:
+    jurisdiction: ${GEMINI_JURISDICTION}
+    region: ${GEMINI_REGION}
+    baa: ${GEMINI_BAA}
+    zero_data_retention: ${GEMINI_ZERO_RETENTION}
+  nova:
+    jurisdiction: ${BEDROCK_JURISDICTION}
+    region: ${AWS_REGION}
+    baa: ${BEDROCK_BAA}
+    zero_data_retention: ${BEDROCK_ZERO_RETENTION}

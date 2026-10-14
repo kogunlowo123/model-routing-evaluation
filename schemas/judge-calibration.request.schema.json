@@ -1,0 +1,96 @@
+{
+  "$defs": {
+    "CalibrationItem": {
+      "additionalProperties": false,
+      "description": "A model output a human has already scored on the rubric's 1-5 scale.",
+      "properties": {
+        "human_score": {
+          "maximum": 5,
+          "minimum": 1,
+          "title": "Human Score",
+          "type": "integer"
+        },
+        "output": {
+          "maxLength": 20000,
+          "minLength": 1,
+          "title": "Output",
+          "type": "string"
+        },
+        "prompt": {
+          "maxLength": 20000,
+          "minLength": 1,
+          "title": "Prompt",
+          "type": "string"
+        },
+        "reference": {
+          "anyOf": [
+            {
+              "maxLength": 20000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reference"
+        }
+      },
+      "required": [
+        "prompt",
+        "output",
+        "human_score"
+      ],
+      "title": "CalibrationItem",
+      "type": "object"
+    },
+    "DataClassification": {
+      "description": "Sensitivity label. Ordered from least to most restricted.",
+      "enum": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "title": "DataClassification",
+      "type": "integer"
+    }
+  },
+  "$id": "https://github.com/kogunlowo123/model-routing-evaluation/schemas/judge-calibration.request.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "classification": {
+      "$ref": "#/$defs/DataClassification",
+      "default": 1
+    },
+    "items": {
+      "items": {
+        "$ref": "#/$defs/CalibrationItem"
+      },
+      "maxItems": 500,
+      "minItems": 1,
+      "title": "Items",
+      "type": "array"
+    },
+    "judge_provider": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Judge Provider",
+      "type": "string"
+    },
+    "rubric": {
+      "maxLength": 4000,
+      "minLength": 20,
+      "title": "Rubric",
+      "type": "string"
+    }
+  },
+  "required": [
+    "judge_provider",
+    "rubric",
+    "items"
+  ],
+  "title": "CalibrationCommand",
+  "type": "object"
+}

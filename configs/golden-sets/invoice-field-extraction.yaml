@@ -1,0 +1,52 @@
+name: invoice-field-extraction
+version: "1"
+task: extract
+description: Extract invoice number, total, ISO 4217 currency and due date from invoice text as JSON.
+classification: 2
+max_tokens: 200
+system_prompt: |
+  Extract these fields from the invoice text and reply with one JSON object only:
+  invoice_number (string), total (number, the amount due including tax),
+  currency (ISO 4217 three-letter code), due_date (YYYY-MM-DD).
+grader:
+  kind: json_schema
+  schema:
+    type: object
+    required: [invoice_number, total, currency, due_date]
+    additionalProperties: false
+    properties:
+      invoice_number: {type: string, minLength: 1}
+      total: {type: number, minimum: 0}
+      currency: {type: string, minLength: 3, maxLength: 3}
+      due_date: {type: string, minLength: 10, maxLength: 10}
+cases:
+  - id: inv-001
+    input: "Invoice INV-2026-0412 from Harbor Office Supply. Subtotal 1,200.00 USD, tax 96.00 USD, total due 1,296.00 USD. Payment due by 15 November 2026."
+    expected: {invoice_number: INV-2026-0412, total: 1296.0, currency: USD, due_date: "2026-11-15"}
+  - id: inv-002
+    input: "Rechnung Nr. 88-1931. Gesamtbetrag 4.760,00 EUR inkl. MwSt. Zahlbar bis 01.12.2026."
+    expected: {invoice_number: 88-1931, total: 4760.0, currency: EUR, due_date: "2026-12-01"}
+  - id: inv-003
+    input: "Bill reference A7731 for consulting services, October 2026. Amount payable: GBP 2,350.50. Terms: net 30 from 3 November 2026, i.e. due 3 December 2026."
+    expected: {invoice_number: A7731, total: 2350.5, currency: GBP, due_date: "2026-12-03"}
+  - id: inv-004
+    input: "INVOICE #5512 | Lakeside Catering | 40 lunches x 18.75 = 750.00 | Service charge 75.00 | TOTAL CAD 825.00 | Due 2026-10-31"
+    expected: {invoice_number: "5512", total: 825.0, currency: CAD, due_date: "2026-10-31"}
+  - id: inv-005
+    input: "Tax invoice TI-0099. Licence renewal, 25 seats. Total including GST: AUD 3,437.50. Please pay before 20 January 2027."
+    expected: {invoice_number: TI-0099, total: 3437.5, currency: AUD, due_date: "2027-01-20"}
+  - id: inv-006
+    input: "Invoice number: 2026/314. Freight charges 610.00, fuel surcharge 48.80. Amount due (USD): 658.80. Due date: 7 Dec 2026."
+    expected: {invoice_number: 2026/314, total: 658.8, currency: USD, due_date: "2026-12-07"}
+  - id: inv-007
+    input: "Facture F-77120. Montant total TTC : 1 980,00 EUR. Date d'echeance : 28/11/2026."
+    expected: {invoice_number: F-77120, total: 1980.0, currency: EUR, due_date: "2026-11-28"}
+  - id: inv-008
+    input: "Invoice JP-4410. Cloud hosting, September 2026. Total amount: 186,450 JPY. Payment deadline: 2026-10-30."
+    expected: {invoice_number: JP-4410, total: 186450.0, currency: JPY, due_date: "2026-10-30"}
+  - id: inv-009
+    input: "Pro forma replaced by final invoice FIN-3307. Previous invoice FIN-3301 is void. Final total CHF 12,000.00, due on 15 February 2027."
+    expected: {invoice_number: FIN-3307, total: 12000.0, currency: CHF, due_date: "2027-02-15"}
+  - id: inv-010
+    input: "Invoice 00921 - Maintenance visit. Labour 320.00 + parts 145.20 = 465.20 USD. Credit applied -65.20. Balance due 400.00 USD by 9 November 2026."
+    expected: {invoice_number: "00921", total: 400.0, currency: USD, due_date: "2026-11-09"}

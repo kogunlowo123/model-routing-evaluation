@@ -1,0 +1,169 @@
+{
+  "$defs": {
+    "Candidate": {
+      "description": "A provider that passed every hard filter, with the scores used to order it.",
+      "properties": {
+        "estimated_cost_usd": {
+          "minimum": 0,
+          "title": "Estimated Cost Usd",
+          "type": "number"
+        },
+        "model": {
+          "title": "Model",
+          "type": "string"
+        },
+        "provider": {
+          "title": "Provider",
+          "type": "string"
+        },
+        "sampled_cost_usd": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sampled Cost Usd"
+        },
+        "sampled_latency_ms": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sampled Latency Ms"
+        },
+        "sampled_quality": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sampled Quality"
+        },
+        "utility": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Utility"
+        }
+      },
+      "required": [
+        "provider",
+        "model",
+        "estimated_cost_usd"
+      ],
+      "title": "Candidate",
+      "type": "object"
+    },
+    "Exclusion": {
+      "properties": {
+        "detail": {
+          "title": "Detail",
+          "type": "string"
+        },
+        "provider": {
+          "title": "Provider",
+          "type": "string"
+        },
+        "reason": {
+          "$ref": "#/$defs/ExclusionReason"
+        }
+      },
+      "required": [
+        "provider",
+        "reason",
+        "detail"
+      ],
+      "title": "Exclusion",
+      "type": "object"
+    },
+    "ExclusionReason": {
+      "enum": [
+        "not_in_pool",
+        "classification_ceiling",
+        "task_not_served",
+        "no_compliance_profile",
+        "residency",
+        "baa_required",
+        "cost_ceiling"
+      ],
+      "title": "ExclusionReason",
+      "type": "string"
+    },
+    "Strategy": {
+      "enum": [
+        "learned",
+        "priority",
+        "cost"
+      ],
+      "title": "Strategy",
+      "type": "string"
+    }
+  },
+  "$id": "https://github.com/kogunlowo123/model-routing-evaluation/schemas/route-plan.response.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "bucket": {
+      "title": "Bucket",
+      "type": "string"
+    },
+    "candidates": {
+      "items": {
+        "$ref": "#/$defs/Candidate"
+      },
+      "title": "Candidates",
+      "type": "array"
+    },
+    "excluded": {
+      "items": {
+        "$ref": "#/$defs/Exclusion"
+      },
+      "title": "Excluded",
+      "type": "array"
+    },
+    "family": {
+      "title": "Family",
+      "type": "string"
+    },
+    "policy_digest": {
+      "title": "Policy Digest",
+      "type": "string"
+    },
+    "policy_version": {
+      "title": "Policy Version",
+      "type": "string"
+    },
+    "strategy": {
+      "$ref": "#/$defs/Strategy"
+    }
+  },
+  "required": [
+    "family",
+    "bucket",
+    "strategy",
+    "candidates",
+    "excluded",
+    "policy_version",
+    "policy_digest"
+  ],
+  "title": "RoutePlan",
+  "type": "object"
+}

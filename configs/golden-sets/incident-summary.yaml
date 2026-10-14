@@ -1,0 +1,54 @@
+name: incident-summary
+version: "1"
+task: summarize
+description: Summarize an operational incident report for an executive status update.
+classification: 1
+max_tokens: 200
+system_prompt: |
+  Summarize the incident report in at most three sentences for an executive
+  status update. State the affected service, the customer impact, the root
+  cause and the remediation. Do not add facts that are not in the report.
+grader:
+  kind: llm_judge
+  pass_threshold: 4
+  judge_providers: [claude, azure-gpt]
+  rubric: |
+    5: names the affected service, the customer impact, the root cause and the
+       remediation exactly as the source states them, in at most three
+       sentences, and adds no fact absent from the source.
+    4: all four elements present and faithful; minor verbosity or one extra
+       sentence.
+    3: one element missing or imprecise, nothing invented.
+    2: two or more elements missing, or one statement not supported by the source.
+    1: misstates the incident or invents impact, cause or remediation.
+cases:
+  - id: inc-001
+    input: "At 09:12 UTC the payments API began returning HTTP 503 for 18 minutes. About 4% of card authorisations failed and were retried by clients. Cause: a configuration push lowered the connection-pool limit on the database proxy from 400 to 40. The change was rolled back at 09:30 and a pre-deploy check for pool limits was added."
+    expected: "The payments API returned 503 errors for 18 minutes, failing about 4% of card authorisations. A configuration push cut the database proxy connection pool from 400 to 40; it was rolled back at 09:30 and a pre-deploy pool-limit check was added."
+  - id: inc-002
+    input: "Search results were stale for 3 hours on 2 October because the indexing workers stopped consuming the change queue after a credentials rotation. New and edited products did not appear in search. Workers were restarted with the rotated credentials and an alert on queue lag over 10 minutes was created."
+    expected: "Product search served stale results for 3 hours on 2 October, so new and edited products were missing. Indexing workers stopped after a credentials rotation; they were restarted with the new credentials and a queue-lag alert was added."
+  - id: inc-003
+    input: "Customers in the EU region could not upload attachments for 47 minutes. Uploads failed with timeout errors. An expired TLS certificate on the object-storage gateway caused the failures. The certificate was renewed and automated renewal was enabled for that gateway."
+    expected: "EU customers could not upload attachments for 47 minutes because uploads timed out. An expired TLS certificate on the object-storage gateway was the cause; it was renewed and automated renewal enabled."
+  - id: inc-004
+    input: "The mobile push-notification service delivered duplicate notifications to roughly 120,000 users over two hours. A retry policy change made the sender retry on HTTP 202 responses as if they were failures. The policy was reverted and a contract test for provider response codes was added."
+    expected: "The push-notification service sent duplicate notifications to about 120,000 users over two hours. A retry-policy change treated HTTP 202 as a failure; it was reverted and a contract test for response codes was added."
+  - id: inc-005
+    input: "Nightly billing exports to the finance data warehouse were missing for 5 and 6 October. Finance reports for those days showed zero revenue. The export job failed silently after a schema change renamed the amount column. The job was fixed, both days were backfilled, and the job now fails loudly on schema mismatch."
+    expected: "Billing exports to the finance warehouse were missing for 5 and 6 October, so reports showed zero revenue. A schema change renamed the amount column and the job failed silently; it was fixed, both days backfilled, and the job now fails on schema mismatch."
+  - id: inc-006
+    input: "Login latency rose from 300 ms to 6 seconds for 25 minutes during peak traffic. Some users abandoned sign-in. The identity provider's token-signing service was CPU-throttled because its container CPU limit had been halved in a cost-reduction change. The limit was restored and load tests were added to the change process."
+    expected: "Login latency rose from 300 ms to 6 seconds for 25 minutes at peak, and some users abandoned sign-in. Halving the token-signing service's CPU limit caused throttling; the limit was restored and load tests added to the change process."
+  - id: inc-007
+    input: "For 11 minutes the status page showed all systems operational while the checkout service was down. Customers could not complete purchases. The status page health check pointed at a cached endpoint that kept returning success. The check was repointed to the live checkout endpoint."
+    expected: "Checkout was down for 11 minutes and customers could not complete purchases, while the status page still showed operational. Its health check used a cached endpoint; it now checks the live checkout endpoint."
+  - id: inc-008
+    input: "A data-retention job deleted 90 days of audit logs in the staging environment instead of 30 days. No production data was affected. A shared configuration value was read from the wrong environment file. Retention values are now environment-scoped and the job requires a dry-run review before execution."
+    expected: "A retention job deleted 90 days of staging audit logs instead of 30, with no production impact. It read a shared value from the wrong environment file; retention values are now environment-scoped and the job needs a dry-run review."
+  - id: inc-009
+    input: "Video calls dropped for users on one ISP for 40 minutes. Affected users saw repeated reconnects. The ISP's routing change sent traffic to a TURN relay that was at capacity. Traffic was shifted to additional relays and relay capacity alerts were lowered to 70 percent."
+    expected: "Users on one ISP had video calls drop for 40 minutes with repeated reconnects. An ISP routing change sent them to a TURN relay at capacity; traffic was moved to more relays and capacity alerts lowered to 70 percent."
+  - id: inc-010
+    input: "Scheduled reports were emailed one day late to all enterprise customers on 9 October. The scheduler skipped a run during the daylight-saving transition because it used local time. The scheduler now runs on UTC and the missed reports were sent manually."
+    expected: "Scheduled reports reached all enterprise customers a day late on 9 October. The scheduler used local time and skipped a run at the daylight-saving change; it now runs on UTC and missed reports were sent manually."

@@ -1,0 +1,70 @@
+# Task families. Each family has its own utility weights, targets, routing
+# pool, shadow sampling and promotion gate.
+#
+# Utility = w.quality * quality
+#         + w.latency * 1 / (1 + latency / latency_target_ms)
+#         + w.cost    * 1 / (1 + cost / cost_target_usd)
+#         + w.compliance * posture   (0.5 * BAA + 0.5 * zero data retention)
+# Targets are service objectives chosen by the platform team: a provider
+# exactly at target scores 0.5 on that term.
+#
+# Pools change only through approved promotions (POST /v1/promotions), which
+# need offline evaluation evidence that passes the family's gate.
+default_strategy: learned
+restricted_requires_baa: true
+long_input_chars: 8000
+prior_pseudo_observations: 10
+offline_prior_weight: 0.25
+
+families:
+  general:
+    description: Open-ended assistance where answer quality dominates.
+    weights: {quality: 0.6, latency: 0.15, cost: 0.15, compliance: 0.1}
+    latency_target_ms: 5000
+    cost_target_usd: 0.03
+    expected_output_ratio: 0.5
+    pool: [azure-gpt, claude, llama]
+    shadow:
+      rate: 0.02
+      providers: [gemini]
+      judge_providers: [claude, azure-gpt]
+    promotion: {min_pass_rate: 0.8, min_cases: 10, require_calibrated_judge: true}
+
+  classify:
+    description: Assign exactly one label from a closed label set.
+    weights: {quality: 0.5, latency: 0.25, cost: 0.2, compliance: 0.05}
+    latency_target_ms: 1500
+    cost_target_usd: 0.002
+    expected_output_ratio: 0.1
+    pool: [phi, azure-gpt, nova]
+    shadow:
+      rate: 0.05
+      providers: [llama]
+      judge_providers: []
+    promotion: {min_pass_rate: 0.9, min_cases: 10, require_calibrated_judge: false}
+
+  extract:
+    description: Extract structured fields from documents into JSON that satisfies a schema.
+    weights: {quality: 0.55, latency: 0.15, cost: 0.2, compliance: 0.1}
+    latency_target_ms: 3000
+    cost_target_usd: 0.01
+    expected_output_ratio: 0.3
+    pool: [azure-gpt, phi, claude]
+    shadow:
+      rate: 0.05
+      providers: [nova]
+      judge_providers: []
+    promotion: {min_pass_rate: 0.9, min_cases: 10, require_calibrated_judge: false}
+
+  summarize:
+    description: Summarize operational text faithfully, keeping every material fact and inventing none.
+    weights: {quality: 0.55, latency: 0.15, cost: 0.2, compliance: 0.1}
+    latency_target_ms: 6000
+    cost_target_usd: 0.02
+    expected_output_ratio: 0.4
+    pool: [claude, azure-gpt, phi]
+    shadow:
+      rate: 0.05
+      providers: [nova, llama]
+      judge_providers: [claude, azure-gpt]
+    promotion: {min_pass_rate: 0.8, min_cases: 10, require_calibrated_judge: true}

@@ -1,0 +1,32 @@
+# Access policy for agents when no identity fabric is configured
+# (MRE_FABRIC_URL unset). Agent tokens are verified against
+# MRE_AGENT_JWKS_URL. Subject attributes: scopes; action_in_scope (true when
+# a token scope equals the action or covers it with a trailing ":*");
+# delegated (the token carries an RFC 8693 "act" claim).
+# Actions: model-routing:invoke, model-routing:plan, model-routing:feedback,
+# evaluation:run, evaluation:read, evaluation:calibrate, report:read,
+# ledger:read, provider:read, promotion:request
+name: model-routing-agent-access
+version: "2026.10.0"
+rules:
+  - id: deny-delegated-restricted
+    description: Restricted data is not reachable through a delegated credential.
+    effect: deny
+    actions: ["*"]
+    conditions:
+      - {attribute: resource.classification, operator: gte, value: 3}
+      - {attribute: subject.delegated, operator: eq, value: true}
+
+  - id: deny-delegated-governance
+    description: Evaluation spend and pool changes need the agent's own credential.
+    effect: deny
+    actions: ["evaluation:run", "evaluation:calibrate", "promotion:request"]
+    conditions:
+      - {attribute: subject.delegated, operator: eq, value: true}
+
+  - id: allow-scoped-actions
+    description: An action is allowed when the credential carries it as a scope.
+    effect: allow
+    actions: ["*"]
+    conditions:
+      - {attribute: subject.action_in_scope, operator: eq, value: true}

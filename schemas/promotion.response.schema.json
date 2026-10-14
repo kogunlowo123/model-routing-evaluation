@@ -1,0 +1,133 @@
+{
+  "$defs": {
+    "PromotionAction": {
+      "enum": [
+        "add",
+        "remove"
+      ],
+      "title": "PromotionAction",
+      "type": "string"
+    },
+    "PromotionStatus": {
+      "enum": [
+        "pending",
+        "approved",
+        "rejected"
+      ],
+      "title": "PromotionStatus",
+      "type": "string"
+    }
+  },
+  "$id": "https://github.com/kogunlowo123/model-routing-evaluation/schemas/promotion.response.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "action": {
+      "$ref": "#/$defs/PromotionAction"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "decided_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Decided At"
+    },
+    "decided_by": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Decided By"
+    },
+    "decision_reason": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Decision Reason"
+    },
+    "evidence": {
+      "additionalProperties": true,
+      "title": "Evidence",
+      "type": "object"
+    },
+    "family": {
+      "title": "Family",
+      "type": "string"
+    },
+    "justification": {
+      "title": "Justification",
+      "type": "string"
+    },
+    "policy_digest": {
+      "title": "Policy Digest",
+      "type": "string"
+    },
+    "policy_version": {
+      "title": "Policy Version",
+      "type": "string"
+    },
+    "promotion_id": {
+      "title": "Promotion Id",
+      "type": "string"
+    },
+    "provider": {
+      "title": "Provider",
+      "type": "string"
+    },
+    "requested_by": {
+      "title": "Requested By",
+      "type": "string"
+    },
+    "run_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Run Id"
+    },
+    "status": {
+      "$ref": "#/$defs/PromotionStatus"
+    }
+  },
+  "required": [
+    "promotion_id",
+    "family",
+    "provider",
+    "action",
+    "run_id",
+    "justification",
+    "status",
+    "requested_by",
+    "evidence",
+    "policy_version",
+    "policy_digest",
+    "created_at"
+  ],
+  "title": "Promotion",
+  "type": "object"
+}

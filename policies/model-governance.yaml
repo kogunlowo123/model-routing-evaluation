@@ -1,0 +1,53 @@
+# Governance policy evaluated by the service for every routing request,
+# evaluation run, judge calibration and routing-pool change, in addition to
+# caller authorization (identity fabric or local access policy).
+# Combining: deny overrides, then require_approval, then allow; default deny.
+# classification: 0=PUBLIC 1=INTERNAL 2=CONFIDENTIAL 3=RESTRICTED
+name: model-governance
+version: "2026.10.0"
+rules:
+  - id: deny-restricted-without-purpose
+    description: Restricted data is routed only with a declared purpose of use.
+    effect: deny
+    actions: ["model-routing:invoke"]
+    conditions:
+      - {attribute: resource.classification, operator: gte, value: 3}
+      - {attribute: environment.purpose_of_use, operator: exists, value: false}
+
+  - id: allow-routing
+    description: Routing to compliance-filtered providers is a normal operation.
+    effect: allow
+    actions: ["model-routing:invoke"]
+    resource_types: [task-family]
+
+  - id: deny-evaluation-over-budget
+    description: A single offline run may not be estimated above 50 USD of model spend.
+    effect: deny
+    actions: ["evaluation:run"]
+    conditions:
+      - {attribute: environment.estimated_cost_usd, operator: gt, value: 50}
+
+  - id: allow-evaluation
+    description: Offline evaluation and judge calibration within budget.
+    effect: allow
+    actions: ["evaluation:run", "evaluation:calibrate"]
+
+  - id: deny-pool-change-without-evidence
+    description: Pool changes must carry evidence that passed the family promotion gate.
+    effect: deny
+    actions: ["routing-pool:change"]
+    conditions:
+      - {attribute: environment.evidence_ok, operator: ne, value: true}
+
+  - id: deny-pool-change-evidence-missing
+    description: A pool change request without an evidence assessment is refused.
+    effect: deny
+    actions: ["routing-pool:change"]
+    conditions:
+      - {attribute: environment.evidence_ok, operator: exists, value: false}
+
+  - id: approve-pool-change
+    description: A human approver other than the requester decides every routing-pool change.
+    effect: require_approval
+    actions: ["routing-pool:change"]
+    resource_types: [task-family]

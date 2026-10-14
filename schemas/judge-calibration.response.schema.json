@@ -1,0 +1,85 @@
+{
+  "$id": "https://github.com/kogunlowo123/model-routing-evaluation/schemas/judge-calibration.response.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "calibrated": {
+      "title": "Calibrated",
+      "type": "boolean"
+    },
+    "calibration_id": {
+      "title": "Calibration Id",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "created_by": {
+      "title": "Created By",
+      "type": "string"
+    },
+    "exact_agreement": {
+      "title": "Exact Agreement",
+      "type": "number"
+    },
+    "items": {
+      "title": "Items",
+      "type": "integer"
+    },
+    "judge_provider": {
+      "title": "Judge Provider",
+      "type": "string"
+    },
+    "mapping": {
+      "description": "Isotonic map from raw judge score to expected human score",
+      "items": {
+        "maxItems": 2,
+        "minItems": 2,
+        "prefixItems": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "number"
+          }
+        ],
+        "type": "array"
+      },
+      "title": "Mapping",
+      "type": "array"
+    },
+    "mean_bias": {
+      "title": "Mean Bias",
+      "type": "number"
+    },
+    "rubric_digest": {
+      "title": "Rubric Digest",
+      "type": "string"
+    },
+    "spearman": {
+      "title": "Spearman",
+      "type": "number"
+    },
+    "weighted_kappa": {
+      "title": "Weighted Kappa",
+      "type": "number"
+    }
+  },
+  "required": [
+    "calibration_id",
+    "judge_provider",
+    "rubric_digest",
+    "items",
+    "weighted_kappa",
+    "spearman",
+    "exact_agreement",
+    "mean_bias",
+    "mapping",
+    "calibrated",
+    "created_by",
+    "created_at"
+  ],
+  "title": "CalibrationResult",
+  "type": "object"
+}

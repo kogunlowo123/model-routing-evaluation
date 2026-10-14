@@ -1,0 +1,88 @@
+# Foundation model providers, in agentic-core ProvidersConfig format.
+#
+# ${NAME} values resolve from the environment at start-up and the service
+# refuses to start when any is unset. Credentials are referenced by variable
+# name only. Prices are contracted rates per million tokens and therefore
+# configuration; the ledger multiplies them by the token counts each vendor
+# reports. Required variables: docs/operations/configuration.md.
+#
+# max_classification: 0=PUBLIC 1=INTERNAL 2=CONFIDENTIAL 3=RESTRICTED. It is
+# the highest data class governance has approved for that deployment; the
+# contractual facts (residency, BAA) live in configs/compliance.yaml.
+providers:
+  - kind: openai_compatible
+    base_url: ${AZURE_OPENAI_ENDPOINT}
+    path: /openai/deployments/${AZURE_OPENAI_DEPLOYMENT}/chat/completions
+    query: {api-version: "2024-10-21"}
+    auth: api-key
+    api_key_env: AZURE_OPENAI_API_KEY
+    send_model: false
+    max_tokens_field: max_completion_tokens
+    profile:
+      name: azure-gpt
+      model: ${AZURE_OPENAI_DEPLOYMENT}
+      region: ${AZURE_OPENAI_REGION}
+      max_classification: 3
+      input_cost_per_mtok: ${AZURE_GPT_INPUT_USD_PER_MTOK}
+      output_cost_per_mtok: ${AZURE_GPT_OUTPUT_USD_PER_MTOK}
+      tasks: [general]
+
+  - kind: openai_compatible
+    base_url: ${AZURE_AI_FOUNDRY_ENDPOINT}
+    path: /models/chat/completions
+    query: {api-version: "2024-05-01-preview"}
+    auth: api-key
+    api_key_env: AZURE_AI_FOUNDRY_API_KEY
+    profile:
+      name: phi
+      model: Phi-4
+      region: ${AZURE_AI_FOUNDRY_REGION}
+      max_classification: 2
+      input_cost_per_mtok: ${PHI_INPUT_USD_PER_MTOK}
+      output_cost_per_mtok: ${PHI_OUTPUT_USD_PER_MTOK}
+      tasks: [classify, extract, summarize]
+
+  - kind: openai_compatible
+    base_url: ${AZURE_AI_FOUNDRY_ENDPOINT}
+    path: /models/chat/completions
+    query: {api-version: "2024-05-01-preview"}
+    auth: api-key
+    api_key_env: AZURE_AI_FOUNDRY_API_KEY
+    profile:
+      name: llama
+      model: Llama-3.3-70B-Instruct
+      region: ${AZURE_AI_FOUNDRY_REGION}
+      max_classification: 2
+      input_cost_per_mtok: ${LLAMA_INPUT_USD_PER_MTOK}
+      output_cost_per_mtok: ${LLAMA_OUTPUT_USD_PER_MTOK}
+      tasks: [general]
+
+  - kind: anthropic
+    api_key_env: ANTHROPIC_API_KEY
+    profile:
+      name: claude
+      model: claude-opus-5-5
+      max_classification: 2
+      input_cost_per_mtok: ${CLAUDE_INPUT_USD_PER_MTOK}
+      output_cost_per_mtok: ${CLAUDE_OUTPUT_USD_PER_MTOK}
+      tasks: [general]
+
+  - kind: gemini
+    api_key_env: GEMINI_API_KEY
+    profile:
+      name: gemini
+      model: gemini-2.5-pro
+      max_classification: 1
+      input_cost_per_mtok: ${GEMINI_INPUT_USD_PER_MTOK}
+      output_cost_per_mtok: ${GEMINI_OUTPUT_USD_PER_MTOK}
+      tasks: [general]
+
+  - kind: bedrock
+    profile:
+      name: nova
+      model: amazon.nova-pro-v1:0
+      region: ${AWS_REGION}
+      max_classification: 2
+      input_cost_per_mtok: ${NOVA_INPUT_USD_PER_MTOK}
+      output_cost_per_mtok: ${NOVA_OUTPUT_USD_PER_MTOK}
+      tasks: [classify, extract, summarize]

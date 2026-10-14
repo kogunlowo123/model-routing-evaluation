@@ -1,0 +1,59 @@
+{
+  "$defs": {
+    "PromotionAction": {
+      "enum": [
+        "add",
+        "remove"
+      ],
+      "title": "PromotionAction",
+      "type": "string"
+    }
+  },
+  "$id": "https://github.com/kogunlowo123/model-routing-evaluation/schemas/promotion.request.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "action": {
+      "$ref": "#/$defs/PromotionAction",
+      "default": "add"
+    },
+    "family": {
+      "maxLength": 64,
+      "minLength": 1,
+      "title": "Family",
+      "type": "string"
+    },
+    "justification": {
+      "maxLength": 2000,
+      "minLength": 20,
+      "title": "Justification",
+      "type": "string"
+    },
+    "provider": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Provider",
+      "type": "string"
+    },
+    "run_id": {
+      "anyOf": [
+        {
+          "maxLength": 64,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Run Id"
+    }
+  },
+  "required": [
+    "family",
+    "provider",
+    "justification"
+  ],
+  "title": "PromotionCommand",
+  "type": "object"
+}

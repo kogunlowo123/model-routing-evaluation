@@ -1,0 +1,23 @@
+{
+  "$id": "https://github.com/kogunlowo123/model-routing-evaluation/schemas/promotion-decision.request.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "approve": {
+      "title": "Approve",
+      "type": "boolean"
+    },
+    "reason": {
+      "maxLength": 1000,
+      "minLength": 5,
+      "title": "Reason",
+      "type": "string"
+    }
+  },
+  "required": [
+    "approve",
+    "reason"
+  ],
+  "title": "PromotionDecision",
+  "type": "object"
+}

@@ -1,0 +1,107 @@
+# Local development stack: the routing service in local-verification mode,
+# PostgreSQL, an OIDC provider that issues both agent credentials and
+# approver tokens, and an OpenTelemetry collector.
+#
+# No vendor keys exist on a workstation, so model endpoints point at an
+# unresolvable host: model calls fail over and return 503, while planning,
+# compliance filtering, reports, the ledger, MCP and A2A discovery all work.
+# Prices are 0 and every BAA flag is false. Never use this configuration
+# outside a developer workstation.
+name: model-routing-evaluation
+
+x-provider-env: &provider-env
+  AZURE_OPENAI_ENDPOINT: http://model-endpoints.local.test
+  AZURE_OPENAI_DEPLOYMENT: local-deployment
+  AZURE_OPENAI_API_KEY: local-unset
+  AZURE_OPENAI_REGION: local
+  AZURE_OPENAI_JURISDICTION: US
+  AZURE_OPENAI_BAA: "false"
+  AZURE_OPENAI_ZERO_RETENTION: "false"
+  AZURE_GPT_INPUT_USD_PER_MTOK: "0"
+  AZURE_GPT_OUTPUT_USD_PER_MTOK: "0"
+  AZURE_AI_FOUNDRY_ENDPOINT: http://model-endpoints.local.test
+  AZURE_AI_FOUNDRY_API_KEY: local-unset
+  AZURE_AI_FOUNDRY_REGION: local
+  AZURE_AI_FOUNDRY_JURISDICTION: US
+  AZURE_AI_FOUNDRY_BAA: "false"
+  AZURE_AI_FOUNDRY_ZERO_RETENTION: "false"
+  PHI_INPUT_USD_PER_MTOK: "0"
+  PHI_OUTPUT_USD_PER_MTOK: "0"
+  LLAMA_INPUT_USD_PER_MTOK: "0"
+  LLAMA_OUTPUT_USD_PER_MTOK: "0"
+  ANTHROPIC_API_KEY: local-unset
+  ANTHROPIC_REGION: local
+  ANTHROPIC_JURISDICTION: US
+  ANTHROPIC_BAA: "false"
+  ANTHROPIC_ZERO_RETENTION: "false"
+  CLAUDE_INPUT_USD_PER_MTOK: "0"
+  CLAUDE_OUTPUT_USD_PER_MTOK: "0"
+  GEMINI_API_KEY: local-unset
+  GEMINI_REGION: local
+  GEMINI_JURISDICTION: US
+  GEMINI_BAA: "false"
+  GEMINI_ZERO_RETENTION: "false"
+  GEMINI_INPUT_USD_PER_MTOK: "0"
+  GEMINI_OUTPUT_USD_PER_MTOK: "0"
+  AWS_REGION: us-east-1
+  BEDROCK_JURISDICTION: US
+  BEDROCK_BAA: "false"
+  BEDROCK_ZERO_RETENTION: "false"
+  NOVA_INPUT_USD_PER_MTOK: "0"
+  NOVA_OUTPUT_USD_PER_MTOK: "0"
+
+services:
+  postgres:
+    image: postgres:16.4-alpine
+    environment:
+      POSTGRES_DB: routing
+      POSTGRES_USER: routing
+      POSTGRES_PASSWORD: routing-local-only
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U routing -d routing"]
+      interval: 5s
+      retries: 10
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  oidc:
+    image: ghcr.io/navikt/mock-oauth2-server:2.1.10
+    environment:
+      SERVER_PORT: "8080"
+    ports:
+      - "8081:8080"
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.111.0
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes:
+      - ./deployments/docker/otel-collector.yaml:/etc/otelcol/config.yaml:ro
+
+  routing:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+      oidc:
+        condition: service_started
+    ports:
+      - "8080:8080"
+    environment:
+      <<: *provider-env
+      MRE_ENVIRONMENT: development
+      MRE_DEV_EPHEMERAL_KEYS: "true"
+      MRE_PUBLIC_URL: http://localhost:8080
+      MRE_DATABASE_URL: postgresql+asyncpg://routing:routing-local-only@postgres:5432/routing
+      MRE_AUDIT_CHAIN_ID: local-routing-0
+      MRE_AGENT_ISSUER: http://oidc:8080/agents
+      MRE_AGENT_AUDIENCE: model-routing-evaluation
+      MRE_AGENT_JWKS_URL: http://oidc:8080/agents/jwks
+      MRE_APPROVER_ISSUER: http://oidc:8080/approvers
+      MRE_APPROVER_AUDIENCE: model-routing-governance
+      MRE_APPROVER_JWKS_URL: http://oidc:8080/approvers/jwks
+      MRE_SHADOW_DAILY_BUDGET_USD: "0"
+      MRE_OTLP_ENDPOINT: http://otel-collector:4317
+      MRE_LOG_LEVEL: DEBUG
+
+volumes:
+  pgdata:

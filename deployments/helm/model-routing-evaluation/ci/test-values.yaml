@@ -1,0 +1,67 @@
+# Values used by CI to render and schema-validate the chart (helm lint,
+# helm template | kubeconform). They describe a complete, valid deployment.
+# Prices are 0 because CI never calls a model.
+podLabels:
+  azure.workload.identity/use: "true"
+serviceAccount:
+  annotations:
+    azure.workload.identity/client-id: 00000000-0000-0000-0000-000000000000
+mre:
+  publicUrl: https://routing.agents.ci.internal
+  fabricUrl: https://identity.agents.ci.internal
+  approver:
+    issuer: https://login.ci.internal
+    audience: model-routing-governance
+    jwksUrl: https://login.ci.internal/jwks
+  shadowDailyBudgetUsd: "5"
+  mcpAllowedHosts: [routing.agents.ci.internal]
+providers:
+  azureOpenAI:
+    endpoint: https://openai.ci.internal
+    deployment: routing-ci
+    region: eastus2
+    jurisdiction: US
+    baa: false
+    zeroRetention: false
+    inputUsdPerMtok: "0"
+    outputUsdPerMtok: "0"
+  azureAIFoundry:
+    endpoint: https://foundry.ci.internal
+    region: eastus2
+    jurisdiction: US
+    baa: false
+    zeroRetention: false
+    phiInputUsdPerMtok: "0"
+    phiOutputUsdPerMtok: "0"
+    llamaInputUsdPerMtok: "0"
+    llamaOutputUsdPerMtok: "0"
+  anthropic:
+    region: us
+    jurisdiction: US
+    baa: false
+    zeroRetention: false
+    inputUsdPerMtok: "0"
+    outputUsdPerMtok: "0"
+  gemini:
+    region: us
+    jurisdiction: US
+    baa: false
+    zeroRetention: false
+    inputUsdPerMtok: "0"
+    outputUsdPerMtok: "0"
+  bedrock:
+    awsRegion: us-east-1
+    jurisdiction: US
+    baa: false
+    zeroRetention: false
+    inputUsdPerMtok: "0"
+    outputUsdPerMtok: "0"
+    roleArn: arn:aws:iam::000000000000:role/model-routing-evaluation
+secrets:
+  auditKeyFile: audit-2026-10.pem
+ingress:
+  enabled: true
+  className: nginx
+  host: routing.agents.ci.internal
+serviceMonitor:
+  enabled: true

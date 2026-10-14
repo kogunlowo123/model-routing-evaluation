@@ -1,0 +1,39 @@
+{
+  "$id": "https://github.com/kogunlowo123/model-routing-evaluation/schemas/feedback.request.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "comment": {
+      "anyOf": [
+        {
+          "maxLength": 1000,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Comment"
+    },
+    "decision_id": {
+      "maxLength": 64,
+      "minLength": 1,
+      "title": "Decision Id",
+      "type": "string"
+    },
+    "score": {
+      "description": "0 = unusable, 1 = fully correct",
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Score",
+      "type": "number"
+    }
+  },
+  "required": [
+    "decision_id",
+    "score"
+  ],
+  "title": "FeedbackCommand",
+  "type": "object"
+}

@@ -1,0 +1,358 @@
+{
+  "$defs": {
+    "DataClassification": {
+      "description": "Sensitivity label. Ordered from least to most restricted.",
+      "enum": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "title": "DataClassification",
+      "type": "integer"
+    },
+    "ExactGrader": {
+      "additionalProperties": false,
+      "description": "Exact string match after optional whitespace stripping and case folding.",
+      "properties": {
+        "case_sensitive": {
+          "default": false,
+          "title": "Case Sensitive",
+          "type": "boolean"
+        },
+        "kind": {
+          "const": "exact",
+          "default": "exact",
+          "title": "Kind",
+          "type": "string"
+        },
+        "strip": {
+          "default": true,
+          "title": "Strip",
+          "type": "boolean"
+        }
+      },
+      "title": "ExactGrader",
+      "type": "object"
+    },
+    "GoldenCase": {
+      "additionalProperties": false,
+      "properties": {
+        "expected": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Expected"
+        },
+        "grader": {
+          "anyOf": [
+            {
+              "discriminator": {
+                "mapping": {
+                  "exact": "#/$defs/ExactGrader",
+                  "json_schema": "#/$defs/JsonSchemaGrader",
+                  "llm_judge": "#/$defs/JudgeGrader",
+                  "regex": "#/$defs/RegexGrader"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/ExactGrader"
+                },
+                {
+                  "$ref": "#/$defs/RegexGrader"
+                },
+                {
+                  "$ref": "#/$defs/JsonSchemaGrader"
+                },
+                {
+                  "$ref": "#/$defs/JudgeGrader"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Overrides the set's grader",
+          "title": "Grader"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "input": {
+          "maxLength": 50000,
+          "minLength": 1,
+          "title": "Input",
+          "type": "string"
+        },
+        "tags": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Tags",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "input"
+      ],
+      "title": "GoldenCase",
+      "type": "object"
+    },
+    "JsonSchemaGrader": {
+      "additionalProperties": false,
+      "description": "Output must be JSON valid against ``schema``; ``case.expected`` fields must match.",
+      "properties": {
+        "kind": {
+          "const": "json_schema",
+          "default": "json_schema",
+          "title": "Kind",
+          "type": "string"
+        },
+        "schema": {
+          "additionalProperties": true,
+          "title": "Schema",
+          "type": "object"
+        }
+      },
+      "required": [
+        "schema"
+      ],
+      "title": "JsonSchemaGrader",
+      "type": "object"
+    },
+    "JudgeGrader": {
+      "additionalProperties": false,
+      "description": "A model grades the output against a rubric on a 1-5 scale.",
+      "properties": {
+        "judge_providers": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Judge Providers",
+          "type": "array"
+        },
+        "kind": {
+          "const": "llm_judge",
+          "default": "llm_judge",
+          "title": "Kind",
+          "type": "string"
+        },
+        "pass_threshold": {
+          "default": 4.0,
+          "maximum": 5,
+          "minimum": 1,
+          "title": "Pass Threshold",
+          "type": "number"
+        },
+        "rubric": {
+          "maxLength": 4000,
+          "minLength": 20,
+          "title": "Rubric",
+          "type": "string"
+        }
+      },
+      "required": [
+        "rubric",
+        "judge_providers"
+      ],
+      "title": "JudgeGrader",
+      "type": "object"
+    },
+    "RegexGrader": {
+      "additionalProperties": false,
+      "description": "Every pattern must match; the score is the fraction that do.",
+      "properties": {
+        "ignore_case": {
+          "default": true,
+          "title": "Ignore Case",
+          "type": "boolean"
+        },
+        "kind": {
+          "const": "regex",
+          "default": "regex",
+          "title": "Kind",
+          "type": "string"
+        },
+        "mode": {
+          "default": "search",
+          "enum": [
+            "search",
+            "fullmatch"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "patterns": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20,
+          "minItems": 1,
+          "title": "Patterns",
+          "type": "array"
+        }
+      },
+      "required": [
+        "patterns"
+      ],
+      "title": "RegexGrader",
+      "type": "object"
+    },
+    "RoutingConstraints": {
+      "additionalProperties": false,
+      "description": "Hard constraints a caller attaches to a request. Violations are never traded off.",
+      "properties": {
+        "max_cost_usd": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "maximum": 100,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Cost Usd"
+        },
+        "requires_baa": {
+          "default": false,
+          "title": "Requires Baa",
+          "type": "boolean"
+        },
+        "residency": {
+          "default": [],
+          "description": "Allowed jurisdictions; empty means any",
+          "items": {
+            "type": "string"
+          },
+          "title": "Residency",
+          "type": "array",
+          "uniqueItems": true
+        }
+      },
+      "title": "RoutingConstraints",
+      "type": "object"
+    }
+  },
+  "$id": "https://github.com/kogunlowo123/model-routing-evaluation/schemas/golden-set.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "A versioned, reviewable set of cases with known-good answers for one task family.",
+  "properties": {
+    "cases": {
+      "items": {
+        "$ref": "#/$defs/GoldenCase"
+      },
+      "minItems": 1,
+      "title": "Cases",
+      "type": "array"
+    },
+    "classification": {
+      "$ref": "#/$defs/DataClassification",
+      "default": 1
+    },
+    "constraints": {
+      "$ref": "#/$defs/RoutingConstraints",
+      "default": {
+        "max_cost_usd": null,
+        "requires_baa": false,
+        "residency": []
+      }
+    },
+    "description": {
+      "minLength": 10,
+      "title": "Description",
+      "type": "string"
+    },
+    "grader": {
+      "discriminator": {
+        "mapping": {
+          "exact": "#/$defs/ExactGrader",
+          "json_schema": "#/$defs/JsonSchemaGrader",
+          "llm_judge": "#/$defs/JudgeGrader",
+          "regex": "#/$defs/RegexGrader"
+        },
+        "propertyName": "kind"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/ExactGrader"
+        },
+        {
+          "$ref": "#/$defs/RegexGrader"
+        },
+        {
+          "$ref": "#/$defs/JsonSchemaGrader"
+        },
+        {
+          "$ref": "#/$defs/JudgeGrader"
+        }
+      ],
+      "title": "Grader"
+    },
+    "max_tokens": {
+      "default": 512,
+      "maximum": 8192,
+      "minimum": 1,
+      "title": "Max Tokens",
+      "type": "integer"
+    },
+    "name": {
+      "title": "Name",
+      "type": "string"
+    },
+    "system_prompt": {
+      "anyOf": [
+        {
+          "maxLength": 8000,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "System Prompt"
+    },
+    "task": {
+      "title": "Task",
+      "type": "string"
+    },
+    "version": {
+      "maxLength": 32,
+      "minLength": 1,
+      "title": "Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "version",
+    "task",
+    "description",
+    "grader",
+    "cases"
+  ],
+  "title": "GoldenSet",
+  "type": "object"
+}

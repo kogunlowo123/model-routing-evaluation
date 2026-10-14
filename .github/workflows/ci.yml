@@ -1,0 +1,205 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v10.3.0
+        with:
+          enable-cache: true
+      - run: uv sync --frozen --python ${{ matrix.python }}
+      - name: Lint and format
+        run: |
+          uv run ruff check src tests
+          uv run black --check src tests
+      - name: Type check
+        run: uv run mypy
+      - name: Static security analysis
+        run: uv run python -m bandit -q -r src -c pyproject.toml
+      - name: Published contracts are current
+        run: uv run python -m model_routing_evaluation.contracts --check
+      - name: Unit, security, chaos, performance and e2e tests (coverage gate 90%)
+        run: uv run pytest --cov-report=xml
+      - uses: actions/upload-artifact@v4
+        if: matrix.python == '3.12'
+        with:
+          name: coverage
+          path: coverage.xml
+
+  integration-postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16.4-alpine
+        env:
+          POSTGRES_DB: routing
+          POSTGRES_USER: routing
+          POSTGRES_PASSWORD: ci-only
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U routing" --health-interval 5s --health-retries 10
+    env:
+      MRE_TEST_DATABASE_URL: postgresql+asyncpg://routing:ci-only@localhost:5432/routing
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v10.3.0
+      - run: uv sync --frozen
+      - run: uv run pytest tests/integration -m integration --no-cov -ra
+
+  deploy-artifacts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.16.2
+      - name: Helm lint and render
+        run: |
+          helm lint deployments/helm/model-routing-evaluation \
+            -f deployments/helm/model-routing-evaluation/ci/test-values.yaml
+          helm template routing deployments/helm/model-routing-evaluation \
+            -f deployments/helm/model-routing-evaluation/ci/test-values.yaml > rendered.yaml
+          if helm template routing deployments/helm/model-routing-evaluation > /dev/null 2>&1; then
+            echo "chart rendered without required values"; exit 1
+          fi
+      - name: Kubernetes schema validation (kubeconform)
+        run: |
+          curl -sSfL https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz | tar xz
+          ./kubeconform -strict -summary -ignore-missing-schemas \
+            -schema-location default \
+            -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
+            rendered.yaml deployments/kubernetes/namespace.yaml deployments/kubernetes/external-secrets.yaml
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+      - name: Terraform fmt and validate (aws, azure, gcp)
+        run: |
+          terraform fmt -recursive -check deployments/terraform
+          for cloud in aws azure gcp; do
+            terraform -chdir=deployments/terraform/$cloud init -backend=false -input=false
+            terraform -chdir=deployments/terraform/$cloud validate
+          done
+      - name: IaC and Kubernetes misconfiguration scan (Trivy)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: config
+          scan-ref: deployments
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+
+  container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t model-routing-evaluation:ci .
+      - name: Container smoke test (starts, reports ready, serves the agent card)
+        run: |
+          cat > ci.env <<'EOF'
+          MRE_ENVIRONMENT=ci
+          MRE_DEV_EPHEMERAL_KEYS=true
+          MRE_PUBLIC_URL=http://localhost:8080
+          MRE_DATABASE_URL=sqlite+aiosqlite:////tmp/mre.db
+          MRE_AUDIT_CHAIN_ID=ci-routing-0
+          MRE_AGENT_ISSUER=https://login.ci.internal/agents
+          MRE_AGENT_AUDIENCE=model-routing-evaluation
+          MRE_AGENT_JWKS_URL=https://login.ci.internal/agents/jwks
+          MRE_APPROVER_ISSUER=https://login.ci.internal/approvers
+          MRE_APPROVER_AUDIENCE=model-routing-governance
+          MRE_APPROVER_JWKS_URL=https://login.ci.internal/approvers/jwks
+          AZURE_OPENAI_ENDPOINT=https://openai.ci.internal
+          AZURE_OPENAI_DEPLOYMENT=routing-ci
+          AZURE_OPENAI_API_KEY=ci-unset
+          AZURE_OPENAI_REGION=eastus2
+          AZURE_OPENAI_JURISDICTION=US
+          AZURE_OPENAI_BAA=false
+          AZURE_OPENAI_ZERO_RETENTION=false
+          AZURE_GPT_INPUT_USD_PER_MTOK=0
+          AZURE_GPT_OUTPUT_USD_PER_MTOK=0
+          AZURE_AI_FOUNDRY_ENDPOINT=https://foundry.ci.internal
+          AZURE_AI_FOUNDRY_API_KEY=ci-unset
+          AZURE_AI_FOUNDRY_REGION=eastus2
+          AZURE_AI_FOUNDRY_JURISDICTION=US
+          AZURE_AI_FOUNDRY_BAA=false
+          AZURE_AI_FOUNDRY_ZERO_RETENTION=false
+          PHI_INPUT_USD_PER_MTOK=0
+          PHI_OUTPUT_USD_PER_MTOK=0
+          LLAMA_INPUT_USD_PER_MTOK=0
+          LLAMA_OUTPUT_USD_PER_MTOK=0
+          ANTHROPIC_API_KEY=ci-unset
+          ANTHROPIC_REGION=us
+          ANTHROPIC_JURISDICTION=US
+          ANTHROPIC_BAA=false
+          ANTHROPIC_ZERO_RETENTION=false
+          CLAUDE_INPUT_USD_PER_MTOK=0
+          CLAUDE_OUTPUT_USD_PER_MTOK=0
+          GEMINI_API_KEY=ci-unset
+          GEMINI_REGION=us
+          GEMINI_JURISDICTION=US
+          GEMINI_BAA=false
+          GEMINI_ZERO_RETENTION=false
+          GEMINI_INPUT_USD_PER_MTOK=0
+          GEMINI_OUTPUT_USD_PER_MTOK=0
+          AWS_REGION=us-east-1
+          BEDROCK_JURISDICTION=US
+          BEDROCK_BAA=false
+          BEDROCK_ZERO_RETENTION=false
+          NOVA_INPUT_USD_PER_MTOK=0
+          NOVA_OUTPUT_USD_PER_MTOK=0
+          EOF
+          docker run -d --name routing -p 8080:8080 --env-file ci.env model-routing-evaluation:ci
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8080/readyz && break; sleep 1
+          done
+          curl -sf http://localhost:8080/readyz
+          curl -sf http://localhost:8080/.well-known/agent-card.json | grep -q model-routing-evaluation
+          docker inspect --format '{{.Config.User}}' model-routing-evaluation:ci | grep -q 10001
+          docker logs routing
+      - name: Image vulnerability scan (Trivy)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: model-routing-evaluation:ci
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+      - name: Image SBOM (Syft)
+        uses: anchore/sbom-action@v0.24.3
+        with:
+          image: model-routing-evaluation:ci
+          format: cyclonedx-json
+          output-file: sbom.cdx.json
+      - name: SBOM vulnerability gate (Grype)
+        uses: anchore/scan-action@v7.4.2
+        with:
+          sbom: sbom.cdx.json
+          fail-build: true
+          severity-cutoff: high
+          only-fixed: true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: sbom.cdx.json
+
+  semgrep:
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep:1.95.0
+    steps:
+      - uses: actions/checkout@v4
+      - run: semgrep scan --config p/python --config p/secrets --config p/dockerfile --error --metrics=off src Dockerfile

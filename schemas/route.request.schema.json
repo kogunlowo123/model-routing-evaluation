@@ -1,0 +1,189 @@
+{
+  "$defs": {
+    "ChatMessage": {
+      "additionalProperties": false,
+      "properties": {
+        "content": {
+          "maxLength": 100000,
+          "minLength": 1,
+          "title": "Content",
+          "type": "string"
+        },
+        "role": {
+          "enum": [
+            "system",
+            "user",
+            "assistant"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "trust": {
+          "default": "user",
+          "description": "Mark retrieved documents, web pages and tool output as external",
+          "enum": [
+            "user",
+            "external"
+          ],
+          "title": "Trust",
+          "type": "string"
+        }
+      },
+      "required": [
+        "role",
+        "content"
+      ],
+      "title": "ChatMessage",
+      "type": "object"
+    },
+    "DataClassification": {
+      "description": "Sensitivity label. Ordered from least to most restricted.",
+      "enum": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "title": "DataClassification",
+      "type": "integer"
+    },
+    "RoutingConstraints": {
+      "additionalProperties": false,
+      "description": "Hard constraints a caller attaches to a request. Violations are never traded off.",
+      "properties": {
+        "max_cost_usd": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "maximum": 100,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Cost Usd"
+        },
+        "requires_baa": {
+          "default": false,
+          "title": "Requires Baa",
+          "type": "boolean"
+        },
+        "residency": {
+          "default": [],
+          "description": "Allowed jurisdictions; empty means any",
+          "items": {
+            "type": "string"
+          },
+          "title": "Residency",
+          "type": "array",
+          "uniqueItems": true
+        }
+      },
+      "title": "RoutingConstraints",
+      "type": "object"
+    },
+    "Strategy": {
+      "enum": [
+        "learned",
+        "priority",
+        "cost"
+      ],
+      "title": "Strategy",
+      "type": "string"
+    }
+  },
+  "$id": "https://github.com/kogunlowo123/model-routing-evaluation/schemas/route.request.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "classification": {
+      "$ref": "#/$defs/DataClassification",
+      "default": 1
+    },
+    "constraints": {
+      "$ref": "#/$defs/RoutingConstraints",
+      "default": {
+        "max_cost_usd": null,
+        "requires_baa": false,
+        "residency": []
+      }
+    },
+    "max_tokens": {
+      "default": 1024,
+      "maximum": 8192,
+      "minimum": 1,
+      "title": "Max Tokens",
+      "type": "integer"
+    },
+    "messages": {
+      "items": {
+        "$ref": "#/$defs/ChatMessage"
+      },
+      "maxItems": 50,
+      "minItems": 1,
+      "title": "Messages",
+      "type": "array"
+    },
+    "purpose_of_use": {
+      "anyOf": [
+        {
+          "maxLength": 64,
+          "minLength": 2,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Purpose Of Use"
+    },
+    "response_schema": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "JSON Schema the answer must satisfy; graded immediately",
+      "title": "Response Schema"
+    },
+    "strategy": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Strategy"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "task": {
+      "description": "Task family, e.g. classify",
+      "maxLength": 64,
+      "minLength": 1,
+      "title": "Task",
+      "type": "string"
+    },
+    "temperature": {
+      "default": 0.0,
+      "maximum": 2,
+      "minimum": 0,
+      "title": "Temperature",
+      "type": "number"
+    }
+  },
+  "required": [
+    "task",
+    "messages"
+  ],
+  "title": "RouteCommand",
+  "type": "object"
+}

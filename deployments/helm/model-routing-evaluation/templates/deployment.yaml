@@ -1,0 +1,124 @@
+{{- /*
+Deployment: replicas hold no local state. Each pod writes its own signed
+audit hash chain to PostgreSQL under its pod name (MRE_AUDIT_CHAIN_ID), so
+chains never interleave and survive pod replacement.
+*/ -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mre.fullname" . }}
+  labels: {{- include "mre.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels: {{- include "mre.selectorLabels" . | nindent 6 }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        {{- include "mre.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}{{ toYaml . | nindent 8 }}{{ end }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+    spec:
+      serviceAccountName: {{ .Values.serviceAccount.name }}
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      {{- with .Values.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- range . }}
+        - {{- toYaml . | nindent 10 }}
+          labelSelector:
+            matchLabels: {{- include "mre.selectorLabels" $ | nindent 14 }}
+        {{- end }}
+      {{- end }}
+      containers:
+        - name: routing
+          image: {{ include "mre.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: {{ include "mre.fullname" . }}
+            - secretRef:
+                name: {{ .Values.secrets.providerKeys }}
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: MRE_AUDIT_CHAIN_ID
+              value: $(POD_NAME)
+            - name: MRE_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.database }}
+                  key: DATABASE_URL
+            - name: MRE_FORWARDED_ALLOW_IPS
+              value: "*"
+          readinessProbe:
+            httpGet: {path: /readyz, port: http}
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet: {path: /healthz, port: http}
+            periodSeconds: 20
+            failureThreshold: 3
+          startupProbe:
+            httpGet: {path: /healthz, port: http}
+            periodSeconds: 5
+            failureThreshold: 24
+          resources: {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: audit-key
+              mountPath: /etc/model-routing-evaluation/audit-key
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+            {{- if .Values.providers.bedrock.roleArn }}
+            - name: aws-token
+              mountPath: /var/run/secrets/aws
+              readOnly: true
+            {{- end }}
+      volumes:
+        - name: audit-key
+          secret:
+            secretName: {{ .Values.secrets.auditKey }}
+            defaultMode: 0400
+        - name: tmp
+          emptyDir:
+            sizeLimit: 64Mi
+        {{- if .Values.providers.bedrock.roleArn }}
+        - name: aws-token
+          projected:
+            sources:
+              - serviceAccountToken:
+                  path: token
+                  audience: {{ .Values.providers.bedrock.tokenAudience }}
+                  expirationSeconds: 3600
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations: {{- toYaml . | nindent 8 }}
+      {{- end }}

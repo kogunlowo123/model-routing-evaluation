@@ -1,0 +1,38 @@
+{
+  "$id": "https://github.com/kogunlowo123/model-routing-evaluation/schemas/compliance-profile.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Contractual and residency facts about one provider deployment.\n\nThese are deployment facts (which region the endpoint runs in, whether a\nBAA or DPA covers it), so they come from configuration, never code.",
+  "properties": {
+    "baa": {
+      "description": "A HIPAA Business Associate Agreement covers this deployment",
+      "title": "Baa",
+      "type": "boolean"
+    },
+    "jurisdiction": {
+      "description": "Legal data residency, e.g. US, EU, UK",
+      "title": "Jurisdiction",
+      "type": "string"
+    },
+    "region": {
+      "description": "Cloud region of the endpoint",
+      "maxLength": 64,
+      "minLength": 1,
+      "title": "Region",
+      "type": "string"
+    },
+    "zero_data_retention": {
+      "default": false,
+      "description": "Prompts and outputs are not retained by the vendor",
+      "title": "Zero Data Retention",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "jurisdiction",
+    "region",
+    "baa"
+  ],
+  "title": "ComplianceProfile",
+  "type": "object"
+}

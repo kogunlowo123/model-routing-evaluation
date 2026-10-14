@@ -1,0 +1,190 @@
+{
+  "$defs": {
+    "DataClassification": {
+      "description": "Sensitivity label. Ordered from least to most restricted.",
+      "enum": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "title": "DataClassification",
+      "type": "integer"
+    },
+    "Exclusion": {
+      "properties": {
+        "detail": {
+          "title": "Detail",
+          "type": "string"
+        },
+        "provider": {
+          "title": "Provider",
+          "type": "string"
+        },
+        "reason": {
+          "$ref": "#/$defs/ExclusionReason"
+        }
+      },
+      "required": [
+        "provider",
+        "reason",
+        "detail"
+      ],
+      "title": "Exclusion",
+      "type": "object"
+    },
+    "ExclusionReason": {
+      "enum": [
+        "not_in_pool",
+        "classification_ceiling",
+        "task_not_served",
+        "no_compliance_profile",
+        "residency",
+        "baa_required",
+        "cost_ceiling"
+      ],
+      "title": "ExclusionReason",
+      "type": "string"
+    },
+    "Strategy": {
+      "enum": [
+        "learned",
+        "priority",
+        "cost"
+      ],
+      "title": "Strategy",
+      "type": "string"
+    }
+  },
+  "$id": "https://github.com/kogunlowo123/model-routing-evaluation/schemas/decision-record.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "What was routed where, without the prompt or the answer (data minimisation).",
+  "properties": {
+    "attempts": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Attempts",
+      "type": "array"
+    },
+    "bucket": {
+      "title": "Bucket",
+      "type": "string"
+    },
+    "caller": {
+      "title": "Caller",
+      "type": "string"
+    },
+    "candidates": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Candidates",
+      "type": "array"
+    },
+    "classification": {
+      "$ref": "#/$defs/DataClassification"
+    },
+    "cost_usd": {
+      "title": "Cost Usd",
+      "type": "number"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "decision_id": {
+      "title": "Decision Id",
+      "type": "string"
+    },
+    "excluded": {
+      "items": {
+        "$ref": "#/$defs/Exclusion"
+      },
+      "title": "Excluded",
+      "type": "array"
+    },
+    "family": {
+      "title": "Family",
+      "type": "string"
+    },
+    "input_digest": {
+      "title": "Input Digest",
+      "type": "string"
+    },
+    "input_tokens": {
+      "title": "Input Tokens",
+      "type": "integer"
+    },
+    "latency_ms": {
+      "title": "Latency Ms",
+      "type": "number"
+    },
+    "model": {
+      "title": "Model",
+      "type": "string"
+    },
+    "output_digest": {
+      "title": "Output Digest",
+      "type": "string"
+    },
+    "output_tokens": {
+      "title": "Output Tokens",
+      "type": "integer"
+    },
+    "provider": {
+      "title": "Provider",
+      "type": "string"
+    },
+    "quality": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Quality"
+    },
+    "quality_source": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Quality Source"
+    },
+    "strategy": {
+      "$ref": "#/$defs/Strategy"
+    }
+  },
+  "required": [
+    "decision_id",
+    "family",
+    "bucket",
+    "strategy",
+    "caller",
+    "classification",
+    "provider",
+    "model",
+    "candidates",
+    "excluded",
+    "attempts",
+    "input_digest",
+    "output_digest",
+    "input_tokens",
+    "output_tokens",
+    "cost_usd",
+    "latency_ms",
+    "created_at"
+  ],
+  "title": "DecisionRecord",
+  "type": "object"
+}

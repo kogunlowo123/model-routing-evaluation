@@ -1,0 +1,51 @@
+name: support-ticket-triage
+version: "1"
+task: classify
+description: Route a customer support ticket to exactly one queue label.
+classification: 1
+max_tokens: 16
+system_prompt: |
+  Classify the customer support ticket into exactly one of these labels:
+  billing, technical, account_access, shipping, cancellation, other.
+  Reply with the label only, in lower case, with no punctuation.
+grader:
+  kind: exact
+  case_sensitive: false
+  strip: true
+cases:
+  - id: tt-001
+    input: I was charged twice for my subscription this month. Please refund the duplicate payment.
+    expected: billing
+  - id: tt-002
+    input: The mobile app crashes every time I open the reports tab after the latest update.
+    expected: technical
+  - id: tt-003
+    input: I cannot log in and the password reset email never arrives.
+    expected: account_access
+  - id: tt-004
+    input: My order shows as delivered but nothing arrived at my door.
+    expected: shipping
+  - id: tt-005
+    input: Please close my account at the end of the current billing period and stop all renewals.
+    expected: cancellation
+  - id: tt-006
+    input: Do you have an office in Toronto that I could visit in person?
+    expected: other
+  - id: tt-007
+    input: The invoice lists 12 seats but we only have 9 users; please correct the amount.
+    expected: billing
+  - id: tt-008
+    input: Requests to the export API endpoint have been timing out after 30 seconds since Tuesday.
+    expected: technical
+  - id: tt-009
+    input: Two-factor codes from my authenticator app are rejected even though my phone clock is correct.
+    expected: account_access
+  - id: tt-010
+    input: The parcel was returned to sender because the courier recorded the wrong postcode.
+    expected: shipping
+  - id: tt-011
+    input: We want to end our contract early. What is the termination process?
+    expected: cancellation
+  - id: tt-012
+    input: Our account was locked after too many attempts and the unlock link has already expired.
+    expected: account_access

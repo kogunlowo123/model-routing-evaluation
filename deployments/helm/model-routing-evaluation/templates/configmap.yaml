@@ -1,0 +1,85 @@
+{{- $m := .Values.mre -}}
+{{- $p := .Values.providers -}}
+{{- if not (or $m.fabricUrl (and $m.agentAuth.issuer $m.agentAuth.audience $m.agentAuth.jwksUrl)) -}}
+{{- fail "set mre.fabricUrl or all of mre.agentAuth.issuer, audience and jwksUrl" -}}
+{{- end -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "mre.fullname" . }}
+  labels: {{- include "mre.labels" . | nindent 4 }}
+data:
+  MRE_ENVIRONMENT: {{ $m.environment | quote }}
+  MRE_PUBLIC_URL: {{ required "mre.publicUrl is required" $m.publicUrl | quote }}
+  {{- if $m.fabricUrl }}
+  MRE_FABRIC_URL: {{ $m.fabricUrl | quote }}
+  {{- else }}
+  MRE_AGENT_ISSUER: {{ $m.agentAuth.issuer | quote }}
+  MRE_AGENT_AUDIENCE: {{ $m.agentAuth.audience | quote }}
+  MRE_AGENT_JWKS_URL: {{ $m.agentAuth.jwksUrl | quote }}
+  {{- end }}
+  MRE_APPROVER_ISSUER: {{ required "mre.approver.issuer is required" $m.approver.issuer | quote }}
+  MRE_APPROVER_AUDIENCE: {{ required "mre.approver.audience is required" $m.approver.audience | quote }}
+  MRE_APPROVER_JWKS_URL: {{ required "mre.approver.jwksUrl is required" $m.approver.jwksUrl | quote }}
+  MRE_APPROVER_ROLES_CLAIM: {{ $m.approver.rolesClaim | quote }}
+  MRE_APPROVER_ROLE: {{ $m.approver.approverRole | quote }}
+  MRE_AUDITOR_ROLE: {{ $m.approver.auditorRole | quote }}
+  MRE_AUDIT_KEY_FILE: {{ printf "/etc/model-routing-evaluation/audit-key/%s" (required "secrets.auditKeyFile is required" .Values.secrets.auditKeyFile) | quote }}
+  MRE_SHADOW_DAILY_BUDGET_USD: {{ $m.shadowDailyBudgetUsd | quote }}
+  MRE_EVALUATION_CONCURRENCY: {{ $m.evaluationConcurrency | quote }}
+  MRE_MIN_JUDGE_KAPPA: {{ $m.minJudgeKappa | quote }}
+  MRE_MIN_CALIBRATION_ITEMS: {{ $m.minCalibrationItems | quote }}
+  MRE_MCP_ALLOWED_HOSTS: {{ $m.mcpAllowedHosts | toJson | quote }}
+  MRE_LOG_LEVEL: {{ $m.logLevel | quote }}
+  {{- with $m.otlpEndpoint }}
+  MRE_OTLP_ENDPOINT: {{ . | quote }}
+  {{- end }}
+  {{- with $p.azureOpenAI }}
+  AZURE_OPENAI_ENDPOINT: {{ required "providers.azureOpenAI.endpoint is required" .endpoint | quote }}
+  AZURE_OPENAI_DEPLOYMENT: {{ required "providers.azureOpenAI.deployment is required" .deployment | quote }}
+  AZURE_OPENAI_REGION: {{ required "providers.azureOpenAI.region is required" .region | quote }}
+  AZURE_OPENAI_JURISDICTION: {{ required "providers.azureOpenAI.jurisdiction is required" .jurisdiction | quote }}
+  AZURE_OPENAI_BAA: {{ include "mre.flag" (dict "name" "providers.azureOpenAI.baa" "value" .baa) }}
+  AZURE_OPENAI_ZERO_RETENTION: {{ include "mre.flag" (dict "name" "providers.azureOpenAI.zeroRetention" "value" .zeroRetention) }}
+  AZURE_GPT_INPUT_USD_PER_MTOK: {{ required "providers.azureOpenAI.inputUsdPerMtok is required" .inputUsdPerMtok | quote }}
+  AZURE_GPT_OUTPUT_USD_PER_MTOK: {{ required "providers.azureOpenAI.outputUsdPerMtok is required" .outputUsdPerMtok | quote }}
+  {{- end }}
+  {{- with $p.azureAIFoundry }}
+  AZURE_AI_FOUNDRY_ENDPOINT: {{ required "providers.azureAIFoundry.endpoint is required" .endpoint | quote }}
+  AZURE_AI_FOUNDRY_REGION: {{ required "providers.azureAIFoundry.region is required" .region | quote }}
+  AZURE_AI_FOUNDRY_JURISDICTION: {{ required "providers.azureAIFoundry.jurisdiction is required" .jurisdiction | quote }}
+  AZURE_AI_FOUNDRY_BAA: {{ include "mre.flag" (dict "name" "providers.azureAIFoundry.baa" "value" .baa) }}
+  AZURE_AI_FOUNDRY_ZERO_RETENTION: {{ include "mre.flag" (dict "name" "providers.azureAIFoundry.zeroRetention" "value" .zeroRetention) }}
+  PHI_INPUT_USD_PER_MTOK: {{ required "providers.azureAIFoundry.phiInputUsdPerMtok is required" .phiInputUsdPerMtok | quote }}
+  PHI_OUTPUT_USD_PER_MTOK: {{ required "providers.azureAIFoundry.phiOutputUsdPerMtok is required" .phiOutputUsdPerMtok | quote }}
+  LLAMA_INPUT_USD_PER_MTOK: {{ required "providers.azureAIFoundry.llamaInputUsdPerMtok is required" .llamaInputUsdPerMtok | quote }}
+  LLAMA_OUTPUT_USD_PER_MTOK: {{ required "providers.azureAIFoundry.llamaOutputUsdPerMtok is required" .llamaOutputUsdPerMtok | quote }}
+  {{- end }}
+  {{- with $p.anthropic }}
+  ANTHROPIC_REGION: {{ required "providers.anthropic.region is required" .region | quote }}
+  ANTHROPIC_JURISDICTION: {{ required "providers.anthropic.jurisdiction is required" .jurisdiction | quote }}
+  ANTHROPIC_BAA: {{ include "mre.flag" (dict "name" "providers.anthropic.baa" "value" .baa) }}
+  ANTHROPIC_ZERO_RETENTION: {{ include "mre.flag" (dict "name" "providers.anthropic.zeroRetention" "value" .zeroRetention) }}
+  CLAUDE_INPUT_USD_PER_MTOK: {{ required "providers.anthropic.inputUsdPerMtok is required" .inputUsdPerMtok | quote }}
+  CLAUDE_OUTPUT_USD_PER_MTOK: {{ required "providers.anthropic.outputUsdPerMtok is required" .outputUsdPerMtok | quote }}
+  {{- end }}
+  {{- with $p.gemini }}
+  GEMINI_REGION: {{ required "providers.gemini.region is required" .region | quote }}
+  GEMINI_JURISDICTION: {{ required "providers.gemini.jurisdiction is required" .jurisdiction | quote }}
+  GEMINI_BAA: {{ include "mre.flag" (dict "name" "providers.gemini.baa" "value" .baa) }}
+  GEMINI_ZERO_RETENTION: {{ include "mre.flag" (dict "name" "providers.gemini.zeroRetention" "value" .zeroRetention) }}
+  GEMINI_INPUT_USD_PER_MTOK: {{ required "providers.gemini.inputUsdPerMtok is required" .inputUsdPerMtok | quote }}
+  GEMINI_OUTPUT_USD_PER_MTOK: {{ required "providers.gemini.outputUsdPerMtok is required" .outputUsdPerMtok | quote }}
+  {{- end }}
+  {{- with $p.bedrock }}
+  AWS_REGION: {{ required "providers.bedrock.awsRegion is required" .awsRegion | quote }}
+  BEDROCK_JURISDICTION: {{ required "providers.bedrock.jurisdiction is required" .jurisdiction | quote }}
+  BEDROCK_BAA: {{ include "mre.flag" (dict "name" "providers.bedrock.baa" "value" .baa) }}
+  BEDROCK_ZERO_RETENTION: {{ include "mre.flag" (dict "name" "providers.bedrock.zeroRetention" "value" .zeroRetention) }}
+  NOVA_INPUT_USD_PER_MTOK: {{ required "providers.bedrock.inputUsdPerMtok is required" .inputUsdPerMtok | quote }}
+  NOVA_OUTPUT_USD_PER_MTOK: {{ required "providers.bedrock.outputUsdPerMtok is required" .outputUsdPerMtok | quote }}
+  {{- with .roleArn }}
+  AWS_ROLE_ARN: {{ . | quote }}
+  AWS_WEB_IDENTITY_TOKEN_FILE: /var/run/secrets/aws/token
+  {{- end }}
+  {{- end }}

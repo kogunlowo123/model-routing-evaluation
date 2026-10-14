@@ -1,0 +1,13 @@
+apiVersion: v2
+name: model-routing-evaluation
+description: Multi-foundation-model routing and evaluation platform for enterprise AI agents
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+kubeVersion: ">=1.27.0-0"
+home: https://github.com/kogunlowo123/model-routing-evaluation
+sources:
+  - https://github.com/kogunlowo123/model-routing-evaluation
+maintainers:
+  - name: kogunlowo123
+    url: https://github.com/kogunlowo123

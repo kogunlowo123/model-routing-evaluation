@@ -1,0 +1,219 @@
+{
+  "$defs": {
+    "FamilyConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "cost_target_usd": {
+          "description": "Per-request cost scored 0.5 utility",
+          "exclusiveMinimum": 0,
+          "title": "Cost Target Usd",
+          "type": "number"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "expected_output_ratio": {
+          "default": 0.5,
+          "description": "Expected output tokens as a share of max_tokens",
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "title": "Expected Output Ratio",
+          "type": "number"
+        },
+        "latency_target_ms": {
+          "description": "Latency scored 0.5 utility",
+          "exclusiveMinimum": 0,
+          "title": "Latency Target Ms",
+          "type": "number"
+        },
+        "pool": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Pool",
+          "type": "array"
+        },
+        "promotion": {
+          "$ref": "#/$defs/PromotionGate",
+          "default": {
+            "min_cases": 10,
+            "min_pass_rate": 0.8,
+            "require_calibrated_judge": true
+          }
+        },
+        "shadow": {
+          "$ref": "#/$defs/ShadowConfig",
+          "default": {
+            "judge_providers": [],
+            "providers": [],
+            "rate": 0.0
+          }
+        },
+        "weights": {
+          "$ref": "#/$defs/UtilityWeights"
+        }
+      },
+      "required": [
+        "description",
+        "weights",
+        "latency_target_ms",
+        "cost_target_usd",
+        "pool"
+      ],
+      "title": "FamilyConfig",
+      "type": "object"
+    },
+    "PromotionGate": {
+      "additionalProperties": false,
+      "properties": {
+        "min_cases": {
+          "default": 10,
+          "minimum": 1,
+          "title": "Min Cases",
+          "type": "integer"
+        },
+        "min_pass_rate": {
+          "default": 0.8,
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Min Pass Rate",
+          "type": "number"
+        },
+        "require_calibrated_judge": {
+          "default": true,
+          "title": "Require Calibrated Judge",
+          "type": "boolean"
+        }
+      },
+      "title": "PromotionGate",
+      "type": "object"
+    },
+    "ShadowConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "judge_providers": {
+          "default": [],
+          "description": "Pairwise judges; empty disables pairwise shadow grading",
+          "items": {
+            "type": "string"
+          },
+          "title": "Judge Providers",
+          "type": "array"
+        },
+        "providers": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Providers",
+          "type": "array"
+        },
+        "rate": {
+          "default": 0.0,
+          "description": "Share of requests mirrored",
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Rate",
+          "type": "number"
+        }
+      },
+      "title": "ShadowConfig",
+      "type": "object"
+    },
+    "Strategy": {
+      "enum": [
+        "learned",
+        "priority",
+        "cost"
+      ],
+      "title": "Strategy",
+      "type": "string"
+    },
+    "UtilityWeights": {
+      "additionalProperties": false,
+      "description": "Relative importance of each objective. Must sum to 1.",
+      "properties": {
+        "compliance": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Compliance",
+          "type": "number"
+        },
+        "cost": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Cost",
+          "type": "number"
+        },
+        "latency": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Latency",
+          "type": "number"
+        },
+        "quality": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Quality",
+          "type": "number"
+        }
+      },
+      "required": [
+        "quality",
+        "latency",
+        "cost",
+        "compliance"
+      ],
+      "title": "UtilityWeights",
+      "type": "object"
+    }
+  },
+  "$id": "https://github.com/kogunlowo123/model-routing-evaluation/schemas/routing-config.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "default_strategy": {
+      "$ref": "#/$defs/Strategy",
+      "default": "learned"
+    },
+    "families": {
+      "additionalProperties": {
+        "$ref": "#/$defs/FamilyConfig"
+      },
+      "minProperties": 1,
+      "title": "Families",
+      "type": "object"
+    },
+    "long_input_chars": {
+      "default": 8000,
+      "minimum": 100,
+      "title": "Long Input Chars",
+      "type": "integer"
+    },
+    "offline_prior_weight": {
+      "default": 0.25,
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Offline Prior Weight",
+      "type": "number"
+    },
+    "prior_pseudo_observations": {
+      "default": 10.0,
+      "minimum": 0,
+      "title": "Prior Pseudo Observations",
+      "type": "number"
+    },
+    "restricted_requires_baa": {
+      "default": true,
+      "title": "Restricted Requires Baa",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "families"
+  ],
+  "title": "RoutingConfig",
+  "type": "object"
+}

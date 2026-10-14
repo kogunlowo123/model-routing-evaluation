@@ -1,0 +1,157 @@
+# PrometheusRule-compatible alert rules. Load with the Prometheus Operator
+# (wrap in a PrometheusRule) or a rule_files entry.
+# SLOs (docs/architecture/agent-specification.md):
+#   availability  99.9% of requests succeed, excluding 503 on /v1/route when
+#                 every vendor in the plan failed (vendor outages are tracked
+#                 separately by the route failure ratio)
+#   latency       p99 routing overhead < 150 ms; p99 /v1/route/plan < 250 ms
+groups:
+  - name: model-routing-evaluation.recording
+    rules:
+      - record: mre:request_errors:ratio_5m
+        expr: |
+          (
+            sum(rate(mre_http_request_duration_seconds_count{status=~"5..",status!="503"}[5m]))
+            + (sum(rate(mre_http_request_duration_seconds_count{status="503",route!="/v1/route"}[5m])) or vector(0))
+          )
+          /
+          clamp_min(sum(rate(mre_http_request_duration_seconds_count[5m])), 1e-9)
+      - record: mre:request_errors:ratio_30m
+        expr: |
+          (
+            sum(rate(mre_http_request_duration_seconds_count{status=~"5..",status!="503"}[30m]))
+            + (sum(rate(mre_http_request_duration_seconds_count{status="503",route!="/v1/route"}[30m])) or vector(0))
+          )
+          /
+          clamp_min(sum(rate(mre_http_request_duration_seconds_count[30m])), 1e-9)
+      - record: mre:request_errors:ratio_1h
+        expr: |
+          (
+            sum(rate(mre_http_request_duration_seconds_count{status=~"5..",status!="503"}[1h]))
+            + (sum(rate(mre_http_request_duration_seconds_count{status="503",route!="/v1/route"}[1h])) or vector(0))
+          )
+          /
+          clamp_min(sum(rate(mre_http_request_duration_seconds_count[1h])), 1e-9)
+      - record: mre:request_errors:ratio_6h
+        expr: |
+          (
+            sum(rate(mre_http_request_duration_seconds_count{status=~"5..",status!="503"}[6h]))
+            + (sum(rate(mre_http_request_duration_seconds_count{status="503",route!="/v1/route"}[6h])) or vector(0))
+          )
+          /
+          clamp_min(sum(rate(mre_http_request_duration_seconds_count[6h])), 1e-9)
+      - record: mre:route_failures:ratio_15m
+        expr: |
+          sum(rate(mre_route_failures_total[15m]))
+          /
+          clamp_min(
+            sum(rate(mre_route_decisions_total[15m])) + sum(rate(mre_route_failures_total[15m])),
+            1e-9
+          )
+      - record: mre:model_cost_usd:increase1h
+        expr: sum(increase(mre_model_cost_usd_total[1h]))
+
+  - name: model-routing-evaluation.slo
+    rules:
+      - alert: MreErrorBudgetBurnFast
+        expr: mre:request_errors:ratio_5m > (14.4 * 0.001) and mre:request_errors:ratio_1h > (14.4 * 0.001)
+        for: 2m
+        labels: {severity: page}
+        annotations:
+          summary: Routing service burning its error budget 14x faster than sustainable
+          runbook: docs/runbooks/incident-response.md#elevated-5xx
+
+      - alert: MreErrorBudgetBurnSlow
+        expr: mre:request_errors:ratio_30m > (6 * 0.001) and mre:request_errors:ratio_6h > (6 * 0.001)
+        for: 15m
+        labels: {severity: ticket}
+        annotations:
+          summary: Routing service burning its error budget 6x faster than sustainable
+          runbook: docs/runbooks/incident-response.md#elevated-5xx
+
+      - alert: MreRouteOverheadHigh
+        expr: |
+          histogram_quantile(0.99, sum by (le) (
+            rate(mre_http_request_duration_seconds_bucket{route="/v1/route"}[10m])
+          ))
+          -
+          histogram_quantile(0.99, sum by (le) (
+            rate(mre_model_latency_seconds_bucket{kind="route"}[10m])
+          )) > 0.15
+        for: 15m
+        labels: {severity: ticket}
+        annotations:
+          summary: p99 routing overhead above 150 ms
+          runbook: docs/runbooks/monitoring.md#latency
+
+      - alert: MrePlanLatencyHigh
+        expr: |
+          histogram_quantile(0.99, sum by (le) (
+            rate(mre_http_request_duration_seconds_bucket{route="/v1/route/plan"}[10m])
+          )) > 0.25
+        for: 15m
+        labels: {severity: ticket}
+        annotations:
+          summary: p99 /v1/route/plan above 250 ms
+          runbook: docs/runbooks/monitoring.md#latency
+
+  - name: model-routing-evaluation.routing
+    rules:
+      - alert: MreRouteFailureRatioHigh
+        expr: mre:route_failures:ratio_15m > 0.05
+        for: 10m
+        labels: {severity: page}
+        annotations:
+          summary: More than 5% of routing requests cannot be served (see the reason label)
+          runbook: docs/runbooks/incident-response.md#route-failures
+
+      - alert: MreGuardBlockSpike
+        expr: |
+          sum(rate(mre_guard_blocks_total[10m]))
+          /
+          clamp_min(sum(rate(mre_route_decisions_total[10m])) + sum(rate(mre_guard_blocks_total[10m])), 1e-9)
+          > 0.05
+        for: 10m
+        labels: {severity: page}
+        annotations:
+          summary: More than 5% of routed traffic blocked by content controls
+          runbook: docs/runbooks/incident-response.md#guard-blocks
+
+      - alert: MreShadowErrorRatioHigh
+        expr: |
+          sum(increase(mre_shadow_comparisons_total{outcome="error"}[1h]))
+          /
+          clamp_min(sum(increase(mre_shadow_comparisons_total{outcome!="budget_exhausted"}[1h])), 1)
+          > 0.2
+        for: 30m
+        labels: {severity: ticket}
+        annotations:
+          summary: More than 20% of shadow comparisons fail
+          runbook: docs/runbooks/provider-outage.md#shadow-errors
+
+  - name: model-routing-evaluation.cost
+    rules:
+      - alert: MreSpendAnomaly
+        expr: mre:model_cost_usd:increase1h > 3 * avg_over_time(mre:model_cost_usd:increase1h[7d])
+        for: 30m
+        labels: {severity: ticket}
+        annotations:
+          summary: Hourly model spend above three times its seven-day hourly average
+          runbook: docs/runbooks/cost-spike.md#spend-anomaly
+
+      - alert: MreShadowBudgetExhaustedEarly
+        expr: sum(increase(mre_shadow_comparisons_total{outcome="budget_exhausted"}[1h])) > 0 and on() hour() < 12
+        labels: {severity: ticket}
+        annotations:
+          summary: Daily shadow budget exhausted before 12:00 UTC
+          runbook: docs/runbooks/cost-spike.md#spend-anomaly
+
+  - name: model-routing-evaluation.availability
+    rules:
+      - alert: MreNotReady
+        expr: sum(up{job="model-routing-evaluation"}) < 2
+        for: 5m
+        labels: {severity: page}
+        annotations:
+          summary: Fewer than two routing replicas are being scraped
+          runbook: docs/runbooks/incident-response.md#replicas-down

@@ -1,0 +1,281 @@
+{
+  "$defs": {
+    "Interval": {
+      "properties": {
+        "high": {
+          "title": "High",
+          "type": "number"
+        },
+        "low": {
+          "title": "Low",
+          "type": "number"
+        }
+      },
+      "required": [
+        "low",
+        "high"
+      ],
+      "title": "Interval",
+      "type": "object"
+    },
+    "LedgerTotal": {
+      "properties": {
+        "cost_usd": {
+          "title": "Cost Usd",
+          "type": "number"
+        },
+        "entries": {
+          "title": "Entries",
+          "type": "integer"
+        },
+        "input_tokens": {
+          "title": "Input Tokens",
+          "type": "integer"
+        },
+        "key": {
+          "title": "Key",
+          "type": "string"
+        },
+        "output_tokens": {
+          "title": "Output Tokens",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "key",
+        "entries",
+        "input_tokens",
+        "output_tokens",
+        "cost_usd"
+      ],
+      "title": "LedgerTotal",
+      "type": "object"
+    },
+    "ProviderReport": {
+      "properties": {
+        "cost_usd": {
+          "title": "Cost Usd",
+          "type": "number"
+        },
+        "expected_utility": {
+          "title": "Expected Utility",
+          "type": "number"
+        },
+        "feedback_mean": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Feedback Mean"
+        },
+        "feedback_n": {
+          "title": "Feedback N",
+          "type": "integer"
+        },
+        "in_pool": {
+          "title": "In Pool",
+          "type": "boolean"
+        },
+        "latency_p50_ms": {
+          "title": "Latency P50 Ms",
+          "type": "number"
+        },
+        "latency_p95_ms": {
+          "title": "Latency P95 Ms",
+          "type": "number"
+        },
+        "offline_pass_rate": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Offline Pass Rate"
+        },
+        "offline_pass_rate_ci95": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Interval"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "offline_strength": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Offline Strength"
+        },
+        "posterior_cost_usd": {
+          "title": "Posterior Cost Usd",
+          "type": "number"
+        },
+        "posterior_latency_ms": {
+          "title": "Posterior Latency Ms",
+          "type": "number"
+        },
+        "posterior_quality": {
+          "title": "Posterior Quality",
+          "type": "number"
+        },
+        "posterior_quality_ci95": {
+          "$ref": "#/$defs/Interval"
+        },
+        "provider": {
+          "title": "Provider",
+          "type": "string"
+        },
+        "requests": {
+          "title": "Requests",
+          "type": "integer"
+        },
+        "shadow_comparisons": {
+          "title": "Shadow Comparisons",
+          "type": "integer"
+        },
+        "shadow_win_rate": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Shadow Win Rate"
+        },
+        "traffic_share": {
+          "title": "Traffic Share",
+          "type": "number"
+        }
+      },
+      "required": [
+        "provider",
+        "in_pool",
+        "requests",
+        "traffic_share",
+        "cost_usd",
+        "latency_p50_ms",
+        "latency_p95_ms",
+        "feedback_n",
+        "feedback_mean",
+        "posterior_quality",
+        "posterior_quality_ci95",
+        "posterior_latency_ms",
+        "posterior_cost_usd",
+        "expected_utility",
+        "shadow_comparisons",
+        "shadow_win_rate",
+        "offline_pass_rate",
+        "offline_pass_rate_ci95",
+        "offline_strength"
+      ],
+      "title": "ProviderReport",
+      "type": "object"
+    }
+  },
+  "$id": "https://github.com/kogunlowo123/model-routing-evaluation/schemas/family-report.response.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "description": {
+      "title": "Description",
+      "type": "string"
+    },
+    "family": {
+      "title": "Family",
+      "type": "string"
+    },
+    "generated_at": {
+      "format": "date-time",
+      "title": "Generated At",
+      "type": "string"
+    },
+    "offline_golden_set": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Offline Golden Set"
+    },
+    "offline_run_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Offline Run Id"
+    },
+    "pending_promotions": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Pending Promotions",
+      "type": "array"
+    },
+    "pool": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Pool",
+      "type": "array"
+    },
+    "providers": {
+      "items": {
+        "$ref": "#/$defs/ProviderReport"
+      },
+      "title": "Providers",
+      "type": "array"
+    },
+    "spend_by_kind": {
+      "items": {
+        "$ref": "#/$defs/LedgerTotal"
+      },
+      "title": "Spend By Kind",
+      "type": "array"
+    },
+    "total_cost_usd": {
+      "title": "Total Cost Usd",
+      "type": "number"
+    },
+    "window_days": {
+      "title": "Window Days",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "family",
+    "description",
+    "generated_at",
+    "window_days",
+    "pool",
+    "pending_promotions",
+    "offline_run_id",
+    "offline_golden_set",
+    "providers",
+    "spend_by_kind",
+    "total_cost_usd"
+  ],
+  "title": "FamilyReport",
+  "type": "object"
+}

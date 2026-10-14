@@ -1,0 +1,2914 @@
+{
+  "components": {
+    "schemas": {
+      "Attempt": {
+        "properties": {
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/AttemptOutcome"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "try_number": {
+            "title": "Try Number",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "provider",
+          "outcome",
+          "try_number"
+        ],
+        "title": "Attempt",
+        "type": "object"
+      },
+      "AttemptOutcome": {
+        "enum": [
+          "success",
+          "failed",
+          "skipped_circuit_open"
+        ],
+        "title": "AttemptOutcome",
+        "type": "string"
+      },
+      "AuditVerification": {
+        "properties": {
+          "chains": {
+            "items": {
+              "$ref": "#/components/schemas/ChainVerification"
+            },
+            "title": "Chains",
+            "type": "array"
+          },
+          "key_id": {
+            "title": "Key Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key_id",
+          "chains"
+        ],
+        "title": "AuditVerification",
+        "type": "object"
+      },
+      "BreakerState": {
+        "enum": [
+          "closed",
+          "open",
+          "half_open"
+        ],
+        "title": "BreakerState",
+        "type": "string"
+      },
+      "CalibrationCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "classification": {
+            "$ref": "#/components/schemas/DataClassification",
+            "default": 1
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CalibrationItem"
+            },
+            "maxItems": 500,
+            "minItems": 1,
+            "title": "Items",
+            "type": "array"
+          },
+          "judge_provider": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Judge Provider",
+            "type": "string"
+          },
+          "rubric": {
+            "maxLength": 4000,
+            "minLength": 20,
+            "title": "Rubric",
+            "type": "string"
+          }
+        },
+        "required": [
+          "judge_provider",
+          "rubric",
+          "items"
+        ],
+        "title": "CalibrationCommand",
+        "type": "object"
+      },
+      "CalibrationItem": {
+        "additionalProperties": false,
+        "description": "A model output a human has already scored on the rubric's 1-5 scale.",
+        "properties": {
+          "human_score": {
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Human Score",
+            "type": "integer"
+          },
+          "output": {
+            "maxLength": 20000,
+            "minLength": 1,
+            "title": "Output",
+            "type": "string"
+          },
+          "prompt": {
+            "maxLength": 20000,
+            "minLength": 1,
+            "title": "Prompt",
+            "type": "string"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          }
+        },
+        "required": [
+          "prompt",
+          "output",
+          "human_score"
+        ],
+        "title": "CalibrationItem",
+        "type": "object"
+      },
+      "CalibrationResult": {
+        "properties": {
+          "calibrated": {
+            "title": "Calibrated",
+            "type": "boolean"
+          },
+          "calibration_id": {
+            "title": "Calibration Id",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by": {
+            "title": "Created By",
+            "type": "string"
+          },
+          "exact_agreement": {
+            "title": "Exact Agreement",
+            "type": "number"
+          },
+          "items": {
+            "title": "Items",
+            "type": "integer"
+          },
+          "judge_provider": {
+            "title": "Judge Provider",
+            "type": "string"
+          },
+          "mapping": {
+            "description": "Isotonic map from raw judge score to expected human score",
+            "items": {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            "title": "Mapping",
+            "type": "array"
+          },
+          "mean_bias": {
+            "title": "Mean Bias",
+            "type": "number"
+          },
+          "rubric_digest": {
+            "title": "Rubric Digest",
+            "type": "string"
+          },
+          "spearman": {
+            "title": "Spearman",
+            "type": "number"
+          },
+          "weighted_kappa": {
+            "title": "Weighted Kappa",
+            "type": "number"
+          }
+        },
+        "required": [
+          "calibration_id",
+          "judge_provider",
+          "rubric_digest",
+          "items",
+          "weighted_kappa",
+          "spearman",
+          "exact_agreement",
+          "mean_bias",
+          "mapping",
+          "calibrated",
+          "created_by",
+          "created_at"
+        ],
+        "title": "CalibrationResult",
+        "type": "object"
+      },
+      "Candidate": {
+        "description": "A provider that passed every hard filter, with the scores used to order it.",
+        "properties": {
+          "estimated_cost_usd": {
+            "minimum": 0.0,
+            "title": "Estimated Cost Usd",
+            "type": "number"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "sampled_cost_usd": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sampled Cost Usd"
+          },
+          "sampled_latency_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sampled Latency Ms"
+          },
+          "sampled_quality": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sampled Quality"
+          },
+          "utility": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Utility"
+          }
+        },
+        "required": [
+          "provider",
+          "model",
+          "estimated_cost_usd"
+        ],
+        "title": "Candidate",
+        "type": "object"
+      },
+      "CaseResult": {
+        "properties": {
+          "case_id": {
+            "title": "Case Id",
+            "type": "string"
+          },
+          "cost_usd": {
+            "minimum": 0.0,
+            "title": "Cost Usd",
+            "type": "number"
+          },
+          "detail": {
+            "default": "",
+            "title": "Detail",
+            "type": "string"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "latency_ms": {
+            "minimum": 0.0,
+            "title": "Latency Ms",
+            "type": "number"
+          },
+          "output": {
+            "default": "",
+            "title": "Output",
+            "type": "string"
+          },
+          "passed": {
+            "title": "Passed",
+            "type": "boolean"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "score": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Score",
+            "type": "number"
+          }
+        },
+        "required": [
+          "case_id",
+          "provider",
+          "score",
+          "passed",
+          "latency_ms",
+          "cost_usd"
+        ],
+        "title": "CaseResult",
+        "type": "object"
+      },
+      "ChainVerification": {
+        "properties": {
+          "chain_id": {
+            "title": "Chain Id",
+            "type": "string"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "events": {
+            "title": "Events",
+            "type": "integer"
+          },
+          "intact": {
+            "title": "Intact",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "chain_id",
+          "events",
+          "intact"
+        ],
+        "title": "ChainVerification",
+        "type": "object"
+      },
+      "ChatMessage": {
+        "additionalProperties": false,
+        "properties": {
+          "content": {
+            "maxLength": 100000,
+            "minLength": 1,
+            "title": "Content",
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "system",
+              "user",
+              "assistant"
+            ],
+            "title": "Role",
+            "type": "string"
+          },
+          "trust": {
+            "default": "user",
+            "description": "Mark retrieved documents, web pages and tool output as external",
+            "enum": [
+              "user",
+              "external"
+            ],
+            "title": "Trust",
+            "type": "string"
+          }
+        },
+        "required": [
+          "role",
+          "content"
+        ],
+        "title": "ChatMessage",
+        "type": "object"
+      },
+      "ComplianceProfile": {
+        "additionalProperties": false,
+        "description": "Contractual and residency facts about one provider deployment.\n\nThese are deployment facts (which region the endpoint runs in, whether a\nBAA or DPA covers it), so they come from configuration, never code.",
+        "properties": {
+          "baa": {
+            "description": "A HIPAA Business Associate Agreement covers this deployment",
+            "title": "Baa",
+            "type": "boolean"
+          },
+          "jurisdiction": {
+            "description": "Legal data residency, e.g. US, EU, UK",
+            "title": "Jurisdiction",
+            "type": "string"
+          },
+          "region": {
+            "description": "Cloud region of the endpoint",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Region",
+            "type": "string"
+          },
+          "zero_data_retention": {
+            "default": false,
+            "description": "Prompts and outputs are not retained by the vendor",
+            "title": "Zero Data Retention",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "jurisdiction",
+          "region",
+          "baa"
+        ],
+        "title": "ComplianceProfile",
+        "type": "object"
+      },
+      "DataClassification": {
+        "description": "Sensitivity label. Ordered from least to most restricted.",
+        "enum": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "title": "DataClassification",
+        "type": "integer"
+      },
+      "EvaluationRun": {
+        "properties": {
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "estimated_cost_usd": {
+            "title": "Estimated Cost Usd",
+            "type": "number"
+          },
+          "family": {
+            "title": "Family",
+            "type": "string"
+          },
+          "golden_digest": {
+            "title": "Golden Digest",
+            "type": "string"
+          },
+          "golden_set": {
+            "title": "Golden Set",
+            "type": "string"
+          },
+          "golden_version": {
+            "title": "Golden Version",
+            "type": "string"
+          },
+          "pairwise": {
+            "title": "Pairwise",
+            "type": "boolean"
+          },
+          "providers": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Providers",
+            "type": "array"
+          },
+          "requested_by": {
+            "title": "Requested By",
+            "type": "string"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/RunStatus"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RunSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "run_id",
+          "golden_set",
+          "golden_version",
+          "golden_digest",
+          "family",
+          "providers",
+          "pairwise",
+          "status",
+          "requested_by",
+          "estimated_cost_usd",
+          "created_at"
+        ],
+        "title": "EvaluationRun",
+        "type": "object"
+      },
+      "EvaluationRunView": {
+        "properties": {
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/CaseResult"
+            },
+            "title": "Results",
+            "type": "array"
+          },
+          "run": {
+            "$ref": "#/components/schemas/EvaluationRun"
+          }
+        },
+        "required": [
+          "run",
+          "results"
+        ],
+        "title": "EvaluationRunView",
+        "type": "object"
+      },
+      "Exclusion": {
+        "properties": {
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/ExclusionReason"
+          }
+        },
+        "required": [
+          "provider",
+          "reason",
+          "detail"
+        ],
+        "title": "Exclusion",
+        "type": "object"
+      },
+      "ExclusionReason": {
+        "enum": [
+          "not_in_pool",
+          "classification_ceiling",
+          "task_not_served",
+          "no_compliance_profile",
+          "residency",
+          "baa_required",
+          "cost_ceiling"
+        ],
+        "title": "ExclusionReason",
+        "type": "string"
+      },
+      "FamilyReport": {
+        "properties": {
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "family": {
+            "title": "Family",
+            "type": "string"
+          },
+          "generated_at": {
+            "format": "date-time",
+            "title": "Generated At",
+            "type": "string"
+          },
+          "offline_golden_set": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offline Golden Set"
+          },
+          "offline_run_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offline Run Id"
+          },
+          "pending_promotions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Pending Promotions",
+            "type": "array"
+          },
+          "pool": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Pool",
+            "type": "array"
+          },
+          "providers": {
+            "items": {
+              "$ref": "#/components/schemas/ProviderReport"
+            },
+            "title": "Providers",
+            "type": "array"
+          },
+          "spend_by_kind": {
+            "items": {
+              "$ref": "#/components/schemas/LedgerTotal"
+            },
+            "title": "Spend By Kind",
+            "type": "array"
+          },
+          "total_cost_usd": {
+            "title": "Total Cost Usd",
+            "type": "number"
+          },
+          "window_days": {
+            "title": "Window Days",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "family",
+          "description",
+          "generated_at",
+          "window_days",
+          "pool",
+          "pending_promotions",
+          "offline_run_id",
+          "offline_golden_set",
+          "providers",
+          "spend_by_kind",
+          "total_cost_usd"
+        ],
+        "title": "FamilyReport",
+        "type": "object"
+      },
+      "FeedbackCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "comment": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "decision_id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Decision Id",
+            "type": "string"
+          },
+          "score": {
+            "description": "0 = unusable, 1 = fully correct",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Score",
+            "type": "number"
+          }
+        },
+        "required": [
+          "decision_id",
+          "score"
+        ],
+        "title": "FeedbackCommand",
+        "type": "object"
+      },
+      "FeedbackResult": {
+        "properties": {
+          "decision_id": {
+            "title": "Decision Id",
+            "type": "string"
+          },
+          "family": {
+            "title": "Family",
+            "type": "string"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          }
+        },
+        "required": [
+          "decision_id",
+          "provider",
+          "family",
+          "score"
+        ],
+        "title": "FeedbackResult",
+        "type": "object"
+      },
+      "GoldenSetList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/GoldenSetView"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "GoldenSetList",
+        "type": "object"
+      },
+      "GoldenSetView": {
+        "properties": {
+          "cases": {
+            "title": "Cases",
+            "type": "integer"
+          },
+          "classification": {
+            "$ref": "#/components/schemas/DataClassification"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "digest": {
+            "title": "Digest",
+            "type": "string"
+          },
+          "grader": {
+            "title": "Grader",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "task": {
+            "title": "Task",
+            "type": "string"
+          },
+          "uses_judge": {
+            "title": "Uses Judge",
+            "type": "boolean"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "version",
+          "task",
+          "description",
+          "classification",
+          "cases",
+          "grader",
+          "uses_judge",
+          "digest"
+        ],
+        "title": "GoldenSetView",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "Interval": {
+        "properties": {
+          "high": {
+            "title": "High",
+            "type": "number"
+          },
+          "low": {
+            "title": "Low",
+            "type": "number"
+          }
+        },
+        "required": [
+          "low",
+          "high"
+        ],
+        "title": "Interval",
+        "type": "object"
+      },
+      "LedgerGroup": {
+        "enum": [
+          "provider",
+          "family",
+          "caller",
+          "kind"
+        ],
+        "title": "LedgerGroup",
+        "type": "string"
+      },
+      "LedgerTotal": {
+        "properties": {
+          "cost_usd": {
+            "title": "Cost Usd",
+            "type": "number"
+          },
+          "entries": {
+            "title": "Entries",
+            "type": "integer"
+          },
+          "input_tokens": {
+            "title": "Input Tokens",
+            "type": "integer"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "output_tokens": {
+            "title": "Output Tokens",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "key",
+          "entries",
+          "input_tokens",
+          "output_tokens",
+          "cost_usd"
+        ],
+        "title": "LedgerTotal",
+        "type": "object"
+      },
+      "LedgerView": {
+        "properties": {
+          "family": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Family"
+          },
+          "group_by": {
+            "title": "Group By",
+            "type": "string"
+          },
+          "since": {
+            "format": "date-time",
+            "title": "Since",
+            "type": "string"
+          },
+          "total_cost_usd": {
+            "title": "Total Cost Usd",
+            "type": "number"
+          },
+          "totals": {
+            "items": {
+              "$ref": "#/components/schemas/LedgerTotal"
+            },
+            "title": "Totals",
+            "type": "array"
+          },
+          "until": {
+            "format": "date-time",
+            "title": "Until",
+            "type": "string"
+          }
+        },
+        "required": [
+          "since",
+          "until",
+          "group_by",
+          "family",
+          "totals",
+          "total_cost_usd"
+        ],
+        "title": "LedgerView",
+        "type": "object"
+      },
+      "Promotion": {
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/PromotionAction"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "decided_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided At"
+          },
+          "decided_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided By"
+          },
+          "decision_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decision Reason"
+          },
+          "evidence": {
+            "additionalProperties": true,
+            "title": "Evidence",
+            "type": "object"
+          },
+          "family": {
+            "title": "Family",
+            "type": "string"
+          },
+          "justification": {
+            "title": "Justification",
+            "type": "string"
+          },
+          "policy_digest": {
+            "title": "Policy Digest",
+            "type": "string"
+          },
+          "policy_version": {
+            "title": "Policy Version",
+            "type": "string"
+          },
+          "promotion_id": {
+            "title": "Promotion Id",
+            "type": "string"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "requested_by": {
+            "title": "Requested By",
+            "type": "string"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Id"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PromotionStatus"
+          }
+        },
+        "required": [
+          "promotion_id",
+          "family",
+          "provider",
+          "action",
+          "run_id",
+          "justification",
+          "status",
+          "requested_by",
+          "evidence",
+          "policy_version",
+          "policy_digest",
+          "created_at"
+        ],
+        "title": "Promotion",
+        "type": "object"
+      },
+      "PromotionAction": {
+        "enum": [
+          "add",
+          "remove"
+        ],
+        "title": "PromotionAction",
+        "type": "string"
+      },
+      "PromotionCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/PromotionAction",
+            "default": "add"
+          },
+          "family": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Family",
+            "type": "string"
+          },
+          "justification": {
+            "maxLength": 2000,
+            "minLength": 20,
+            "title": "Justification",
+            "type": "string"
+          },
+          "provider": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Provider",
+            "type": "string"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Id"
+          }
+        },
+        "required": [
+          "family",
+          "provider",
+          "justification"
+        ],
+        "title": "PromotionCommand",
+        "type": "object"
+      },
+      "PromotionDecision": {
+        "additionalProperties": false,
+        "properties": {
+          "approve": {
+            "title": "Approve",
+            "type": "boolean"
+          },
+          "reason": {
+            "maxLength": 1000,
+            "minLength": 5,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "approve",
+          "reason"
+        ],
+        "title": "PromotionDecision",
+        "type": "object"
+      },
+      "PromotionStatus": {
+        "enum": [
+          "pending",
+          "approved",
+          "rejected"
+        ],
+        "title": "PromotionStatus",
+        "type": "string"
+      },
+      "ProviderList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ProviderView"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ProviderList",
+        "type": "object"
+      },
+      "ProviderReport": {
+        "properties": {
+          "cost_usd": {
+            "title": "Cost Usd",
+            "type": "number"
+          },
+          "expected_utility": {
+            "title": "Expected Utility",
+            "type": "number"
+          },
+          "feedback_mean": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feedback Mean"
+          },
+          "feedback_n": {
+            "title": "Feedback N",
+            "type": "integer"
+          },
+          "in_pool": {
+            "title": "In Pool",
+            "type": "boolean"
+          },
+          "latency_p50_ms": {
+            "title": "Latency P50 Ms",
+            "type": "number"
+          },
+          "latency_p95_ms": {
+            "title": "Latency P95 Ms",
+            "type": "number"
+          },
+          "offline_pass_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offline Pass Rate"
+          },
+          "offline_pass_rate_ci95": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Interval"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "offline_strength": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offline Strength"
+          },
+          "posterior_cost_usd": {
+            "title": "Posterior Cost Usd",
+            "type": "number"
+          },
+          "posterior_latency_ms": {
+            "title": "Posterior Latency Ms",
+            "type": "number"
+          },
+          "posterior_quality": {
+            "title": "Posterior Quality",
+            "type": "number"
+          },
+          "posterior_quality_ci95": {
+            "$ref": "#/components/schemas/Interval"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "requests": {
+            "title": "Requests",
+            "type": "integer"
+          },
+          "shadow_comparisons": {
+            "title": "Shadow Comparisons",
+            "type": "integer"
+          },
+          "shadow_win_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shadow Win Rate"
+          },
+          "traffic_share": {
+            "title": "Traffic Share",
+            "type": "number"
+          }
+        },
+        "required": [
+          "provider",
+          "in_pool",
+          "requests",
+          "traffic_share",
+          "cost_usd",
+          "latency_p50_ms",
+          "latency_p95_ms",
+          "feedback_n",
+          "feedback_mean",
+          "posterior_quality",
+          "posterior_quality_ci95",
+          "posterior_latency_ms",
+          "posterior_cost_usd",
+          "expected_utility",
+          "shadow_comparisons",
+          "shadow_win_rate",
+          "offline_pass_rate",
+          "offline_pass_rate_ci95",
+          "offline_strength"
+        ],
+        "title": "ProviderReport",
+        "type": "object"
+      },
+      "ProviderSummary": {
+        "properties": {
+          "cases": {
+            "title": "Cases",
+            "type": "integer"
+          },
+          "cost_per_pass_usd": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Per Pass Usd"
+          },
+          "errors": {
+            "title": "Errors",
+            "type": "integer"
+          },
+          "latency_p50_ms": {
+            "title": "Latency P50 Ms",
+            "type": "number"
+          },
+          "latency_p95_ms": {
+            "title": "Latency P95 Ms",
+            "type": "number"
+          },
+          "mean_score": {
+            "title": "Mean Score",
+            "type": "number"
+          },
+          "pass_rate": {
+            "title": "Pass Rate",
+            "type": "number"
+          },
+          "pass_rate_ci95": {
+            "$ref": "#/components/schemas/Interval"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "total_cost_usd": {
+            "title": "Total Cost Usd",
+            "type": "number"
+          }
+        },
+        "required": [
+          "provider",
+          "cases",
+          "errors",
+          "pass_rate",
+          "pass_rate_ci95",
+          "mean_score",
+          "latency_p50_ms",
+          "latency_p95_ms",
+          "total_cost_usd",
+          "cost_per_pass_usd"
+        ],
+        "title": "ProviderSummary",
+        "type": "object"
+      },
+      "ProviderView": {
+        "properties": {
+          "circuit": {
+            "$ref": "#/components/schemas/BreakerState"
+          },
+          "compliance": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ComplianceProfile"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "max_classification": {
+            "$ref": "#/components/schemas/DataClassification"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "region": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region"
+          },
+          "tasks": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tasks",
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "model",
+          "tasks",
+          "max_classification",
+          "region",
+          "compliance",
+          "circuit"
+        ],
+        "title": "ProviderView",
+        "type": "object"
+      },
+      "RankedProvider": {
+        "properties": {
+          "comparisons": {
+            "title": "Comparisons",
+            "type": "integer"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "strength": {
+            "title": "Strength",
+            "type": "number"
+          },
+          "strength_ci95": {
+            "$ref": "#/components/schemas/Interval"
+          },
+          "wins": {
+            "title": "Wins",
+            "type": "number"
+          }
+        },
+        "required": [
+          "provider",
+          "strength",
+          "strength_ci95",
+          "wins",
+          "comparisons"
+        ],
+        "title": "RankedProvider",
+        "type": "object"
+      },
+      "RouteCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "classification": {
+            "$ref": "#/components/schemas/DataClassification",
+            "default": 1
+          },
+          "constraints": {
+            "$ref": "#/components/schemas/RoutingConstraints",
+            "default": {
+              "requires_baa": false,
+              "residency": []
+            }
+          },
+          "max_tokens": {
+            "default": 1024,
+            "maximum": 8192.0,
+            "minimum": 1.0,
+            "title": "Max Tokens",
+            "type": "integer"
+          },
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/ChatMessage"
+            },
+            "maxItems": 50,
+            "minItems": 1,
+            "title": "Messages",
+            "type": "array"
+          },
+          "purpose_of_use": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "minLength": 2,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purpose Of Use"
+          },
+          "response_schema": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "JSON Schema the answer must satisfy; graded immediately",
+            "title": "Response Schema"
+          },
+          "strategy": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Strategy"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "task": {
+            "description": "Task family, e.g. classify",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Task",
+            "type": "string"
+          },
+          "temperature": {
+            "default": 0.0,
+            "maximum": 2.0,
+            "minimum": 0.0,
+            "title": "Temperature",
+            "type": "number"
+          }
+        },
+        "required": [
+          "task",
+          "messages"
+        ],
+        "title": "RouteCommand",
+        "type": "object"
+      },
+      "RoutePlan": {
+        "properties": {
+          "bucket": {
+            "title": "Bucket",
+            "type": "string"
+          },
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/Candidate"
+            },
+            "title": "Candidates",
+            "type": "array"
+          },
+          "excluded": {
+            "items": {
+              "$ref": "#/components/schemas/Exclusion"
+            },
+            "title": "Excluded",
+            "type": "array"
+          },
+          "family": {
+            "title": "Family",
+            "type": "string"
+          },
+          "policy_digest": {
+            "title": "Policy Digest",
+            "type": "string"
+          },
+          "policy_version": {
+            "title": "Policy Version",
+            "type": "string"
+          },
+          "strategy": {
+            "$ref": "#/components/schemas/Strategy"
+          }
+        },
+        "required": [
+          "family",
+          "bucket",
+          "strategy",
+          "candidates",
+          "excluded",
+          "policy_version",
+          "policy_digest"
+        ],
+        "title": "RoutePlan",
+        "type": "object"
+      },
+      "RouteResult": {
+        "properties": {
+          "attempts": {
+            "items": {
+              "$ref": "#/components/schemas/Attempt"
+            },
+            "title": "Attempts",
+            "type": "array"
+          },
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/Candidate"
+            },
+            "title": "Candidates",
+            "type": "array"
+          },
+          "cost_usd": {
+            "title": "Cost Usd",
+            "type": "number"
+          },
+          "decision_id": {
+            "title": "Decision Id",
+            "type": "string"
+          },
+          "excluded": {
+            "items": {
+              "$ref": "#/components/schemas/Exclusion"
+            },
+            "title": "Excluded",
+            "type": "array"
+          },
+          "failed_over": {
+            "title": "Failed Over",
+            "type": "boolean"
+          },
+          "family": {
+            "title": "Family",
+            "type": "string"
+          },
+          "finish_reason": {
+            "title": "Finish Reason",
+            "type": "string"
+          },
+          "latency_ms": {
+            "title": "Latency Ms",
+            "type": "number"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "policy_digest": {
+            "title": "Policy Digest",
+            "type": "string"
+          },
+          "policy_version": {
+            "title": "Policy Version",
+            "type": "string"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "redactions": {
+            "title": "Redactions",
+            "type": "integer"
+          },
+          "schema_valid": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Schema Valid"
+          },
+          "strategy": {
+            "$ref": "#/components/schemas/Strategy"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/Usage"
+          }
+        },
+        "required": [
+          "decision_id",
+          "family",
+          "strategy",
+          "provider",
+          "model",
+          "text",
+          "finish_reason",
+          "usage",
+          "cost_usd",
+          "latency_ms",
+          "candidates",
+          "excluded",
+          "attempts",
+          "failed_over",
+          "schema_valid",
+          "redactions",
+          "policy_version",
+          "policy_digest"
+        ],
+        "title": "RouteResult",
+        "type": "object"
+      },
+      "RoutingConstraints": {
+        "additionalProperties": false,
+        "description": "Hard constraints a caller attaches to a request. Violations are never traded off.",
+        "properties": {
+          "max_cost_usd": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "maximum": 100.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Cost Usd"
+          },
+          "requires_baa": {
+            "default": false,
+            "title": "Requires Baa",
+            "type": "boolean"
+          },
+          "residency": {
+            "default": [],
+            "description": "Allowed jurisdictions; empty means any",
+            "items": {
+              "type": "string"
+            },
+            "title": "Residency",
+            "type": "array",
+            "uniqueItems": true
+          }
+        },
+        "title": "RoutingConstraints",
+        "type": "object"
+      },
+      "RunCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "golden_set": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Golden Set",
+            "type": "string"
+          },
+          "pairwise": {
+            "default": false,
+            "title": "Pairwise",
+            "type": "boolean"
+          },
+          "pairwise_judges": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 10,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pairwise Judges"
+          },
+          "providers": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 20,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Defaults to the family's routing pool",
+            "title": "Providers"
+          }
+        },
+        "required": [
+          "golden_set"
+        ],
+        "title": "RunCommand",
+        "type": "object"
+      },
+      "RunStatus": {
+        "enum": [
+          "running",
+          "completed",
+          "failed"
+        ],
+        "title": "RunStatus",
+        "type": "string"
+      },
+      "RunSummary": {
+        "properties": {
+          "excluded": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Excluded",
+            "type": "object"
+          },
+          "judge_calibrated": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Judge Calibrated"
+          },
+          "providers": {
+            "items": {
+              "$ref": "#/components/schemas/ProviderSummary"
+            },
+            "title": "Providers",
+            "type": "array"
+          },
+          "ranking": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/RankedProvider"
+            },
+            "title": "Ranking",
+            "type": "array"
+          }
+        },
+        "required": [
+          "providers"
+        ],
+        "title": "RunSummary",
+        "type": "object"
+      },
+      "Strategy": {
+        "enum": [
+          "learned",
+          "priority",
+          "cost"
+        ],
+        "title": "Strategy",
+        "type": "string"
+      },
+      "Usage": {
+        "properties": {
+          "input_tokens": {
+            "title": "Input Tokens",
+            "type": "integer"
+          },
+          "output_tokens": {
+            "title": "Output Tokens",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "input_tokens",
+          "output_tokens"
+        ],
+        "title": "Usage",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "description": "Compliance-filtered, learned routing across GPT, Claude, Gemini, Nova, Llama and Phi; offline and shadow evaluation with calibrated judges; cost ledger; per-family reports. MCP tools at /mcp, A2A at /a2a.",
+    "title": "Model Routing and Evaluation Platform",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/.well-known/agent-card.json": {
+      "get": {
+        "operationId": "a2a_card__well_known_agent_card_json_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response A2A Card  Well Known Agent Card Json Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "A2A Card",
+        "tags": [
+          "a2a"
+        ]
+      }
+    },
+    "/a2a": {
+      "post": {
+        "description": "A2A JSON-RPC 2.0 endpoint (``message/send``).",
+        "operationId": "a2a_a2a_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response A2A A2A Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "A2A",
+        "tags": [
+          "a2a"
+        ]
+      }
+    },
+    "/v1/audit/verify": {
+      "get": {
+        "description": "Verify hash links and signatures of every replica's audit chain.",
+        "operationId": "verify_audit_v1_audit_verify_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditVerification"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Verify Audit",
+        "tags": [
+          "governance"
+        ]
+      }
+    },
+    "/v1/evaluations": {
+      "post": {
+        "description": "Start an offline run of a golden set; poll GET /v1/evaluations/{run_id}.",
+        "operationId": "start_evaluation_v1_evaluations_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvaluationRun"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Start Evaluation",
+        "tags": [
+          "evaluation"
+        ]
+      }
+    },
+    "/v1/evaluations/{run_id}": {
+      "get": {
+        "operationId": "get_evaluation_v1_evaluations__run_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvaluationRunView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Evaluation",
+        "tags": [
+          "evaluation"
+        ]
+      }
+    },
+    "/v1/feedback": {
+      "post": {
+        "operationId": "feedback_v1_feedback_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeedbackCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Feedback",
+        "tags": [
+          "routing"
+        ]
+      }
+    },
+    "/v1/golden-sets": {
+      "get": {
+        "operationId": "golden_sets_v1_golden_sets_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoldenSetList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Golden Sets",
+        "tags": [
+          "evaluation"
+        ]
+      }
+    },
+    "/v1/judges/calibrations": {
+      "post": {
+        "description": "Measure a judge against human 1-5 scores for a rubric (weighted kappa, isotonic map).",
+        "operationId": "calibrate_judge_v1_judges_calibrations_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CalibrationCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalibrationResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Calibrate Judge",
+        "tags": [
+          "evaluation"
+        ]
+      }
+    },
+    "/v1/ledger": {
+      "get": {
+        "operationId": "ledger_v1_ledger_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "days",
+            "required": false,
+            "schema": {
+              "default": 30,
+              "maximum": 366,
+              "minimum": 1,
+              "title": "Days",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "group_by",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/LedgerGroup",
+              "default": "provider"
+            }
+          },
+          {
+            "in": "query",
+            "name": "family",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 64,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Family"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LedgerView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ledger",
+        "tags": [
+          "reports"
+        ]
+      }
+    },
+    "/v1/promotions": {
+      "get": {
+        "operationId": "list_promotions_v1_promotions_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "family",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 64,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Family"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PromotionStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Promotion"
+                  },
+                  "title": "Response List Promotions V1 Promotions Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Promotions",
+        "tags": [
+          "governance"
+        ]
+      },
+      "post": {
+        "description": "Ask to add or remove a provider in a family's routing pool; needs human approval.",
+        "operationId": "request_promotion_v1_promotions_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromotionCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Promotion"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Request Promotion",
+        "tags": [
+          "governance"
+        ]
+      }
+    },
+    "/v1/promotions/{promotion_id}/decision": {
+      "post": {
+        "description": "Human approver decision (enterprise IdP role); the requester cannot approve.",
+        "operationId": "decide_promotion_v1_promotions__promotion_id__decision_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "promotion_id",
+            "required": true,
+            "schema": {
+              "title": "Promotion Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromotionDecision"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Promotion"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Decide Promotion",
+        "tags": [
+          "governance"
+        ]
+      }
+    },
+    "/v1/providers": {
+      "get": {
+        "operationId": "providers_v1_providers_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Providers",
+        "tags": [
+          "routing"
+        ]
+      }
+    },
+    "/v1/reports/{family}": {
+      "get": {
+        "operationId": "family_report_v1_reports__family__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "family",
+            "required": true,
+            "schema": {
+              "title": "Family",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "days",
+            "required": false,
+            "schema": {
+              "default": 7,
+              "maximum": 90,
+              "minimum": 1,
+              "title": "Days",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "required": false,
+            "schema": {
+              "default": "json",
+              "enum": [
+                "json",
+                "markdown"
+              ],
+              "title": "Format",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FamilyReport"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Family Report",
+        "tags": [
+          "reports"
+        ]
+      }
+    },
+    "/v1/route": {
+      "post": {
+        "description": "Route a completion to the best eligible foundation model and return its answer.",
+        "operationId": "route_v1_route_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RouteCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RouteResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Route",
+        "tags": [
+          "routing"
+        ]
+      }
+    },
+    "/v1/route/plan": {
+      "post": {
+        "description": "Dry run: which providers are eligible, why others are excluded, and the order.",
+        "operationId": "plan_v1_route_plan_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RouteCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoutePlan"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Plan",
+        "tags": [
+          "routing"
+        ]
+      }
+    }
+  }
+}

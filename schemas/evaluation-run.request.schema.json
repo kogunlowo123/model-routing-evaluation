@@ -1,0 +1,56 @@
+{
+  "$id": "https://github.com/kogunlowo123/model-routing-evaluation/schemas/evaluation-run.request.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "golden_set": {
+      "maxLength": 64,
+      "minLength": 1,
+      "title": "Golden Set",
+      "type": "string"
+    },
+    "pairwise": {
+      "default": false,
+      "title": "Pairwise",
+      "type": "boolean"
+    },
+    "pairwise_judges": {
+      "anyOf": [
+        {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 10,
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Pairwise Judges"
+    },
+    "providers": {
+      "anyOf": [
+        {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20,
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Defaults to the family's routing pool",
+      "title": "Providers"
+    }
+  },
+  "required": [
+    "golden_set"
+  ],
+  "title": "RunCommand",
+  "type": "object"
+}

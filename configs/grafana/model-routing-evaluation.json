@@ -1,0 +1,118 @@
+{
+  "title": "Model Routing and Evaluation",
+  "uid": "model-routing-evaluation",
+  "schemaVersion": 39,
+  "time": {"from": "now-24h", "to": "now"},
+  "templating": {
+    "list": [
+      {"name": "datasource", "type": "datasource", "query": "prometheus"},
+      {
+        "name": "family", "type": "query", "multi": true, "includeAll": true,
+        "datasource": {"type": "prometheus", "uid": "${datasource}"},
+        "query": "label_values(mre_route_decisions_total, family)"
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1, "type": "stat", "title": "Request success (SLI, 1h)",
+      "gridPos": {"x": 0, "y": 0, "w": 6, "h": 4},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "fieldConfig": {"defaults": {"unit": "percentunit", "decimals": 3}},
+      "targets": [{"expr": "1 - mre:request_errors:ratio_1h"}]
+    },
+    {
+      "id": 2, "type": "stat", "title": "Route failure ratio (15m)",
+      "gridPos": {"x": 6, "y": 0, "w": 6, "h": 4},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "fieldConfig": {"defaults": {"unit": "percentunit", "decimals": 2}},
+      "targets": [{"expr": "mre:route_failures:ratio_15m"}]
+    },
+    {
+      "id": 3, "type": "stat", "title": "Model spend (24h, USD)",
+      "gridPos": {"x": 12, "y": 0, "w": 6, "h": 4},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "fieldConfig": {"defaults": {"unit": "currencyUSD", "decimals": 2}},
+      "targets": [{"expr": "sum(increase(mre_model_cost_usd_total[24h]))"}]
+    },
+    {
+      "id": 4, "type": "stat", "title": "Shadow comparisons in flight",
+      "gridPos": {"x": 18, "y": 0, "w": 6, "h": 4},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "targets": [{"expr": "sum(mre_shadow_in_flight)"}]
+    },
+    {
+      "id": 5, "type": "timeseries", "title": "Routed requests by provider",
+      "gridPos": {"x": 0, "y": 4, "w": 12, "h": 8},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "targets": [{"expr": "sum by (family, provider) (rate(mre_route_decisions_total{family=~\"$family\"}[5m]))", "legendFormat": "{{family}} / {{provider}}"}]
+    },
+    {
+      "id": 6, "type": "timeseries", "title": "Route failures by reason",
+      "gridPos": {"x": 12, "y": 4, "w": 12, "h": 8},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "targets": [{"expr": "sum by (family, reason) (rate(mre_route_failures_total{family=~\"$family\"}[5m]))", "legendFormat": "{{family}} {{reason}}"}]
+    },
+    {
+      "id": 7, "type": "timeseries", "title": "Compliance exclusions by reason",
+      "gridPos": {"x": 0, "y": 12, "w": 12, "h": 8},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "targets": [{"expr": "sum by (reason) (rate(mre_compliance_exclusions_total{family=~\"$family\"}[15m]))", "legendFormat": "{{reason}}"}]
+    },
+    {
+      "id": 8, "type": "timeseries", "title": "Hourly spend by provider and kind (USD)",
+      "gridPos": {"x": 12, "y": 12, "w": 12, "h": 8},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "fieldConfig": {"defaults": {"unit": "currencyUSD"}},
+      "targets": [{"expr": "sum by (provider, kind) (increase(mre_model_cost_usd_total{family=~\"$family\"}[1h]))", "legendFormat": "{{provider}} {{kind}}"}]
+    },
+    {
+      "id": 9, "type": "timeseries", "title": "p95 model latency by provider",
+      "gridPos": {"x": 0, "y": 20, "w": 12, "h": 8},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "fieldConfig": {"defaults": {"unit": "s"}},
+      "targets": [{"expr": "histogram_quantile(0.95, sum by (le, provider) (rate(mre_model_latency_seconds_bucket{kind=\"route\"}[10m])))", "legendFormat": "{{provider}}"}]
+    },
+    {
+      "id": 10, "type": "timeseries", "title": "p99 HTTP latency by route",
+      "gridPos": {"x": 12, "y": 20, "w": 12, "h": 8},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "fieldConfig": {"defaults": {"unit": "s"}},
+      "targets": [{"expr": "histogram_quantile(0.99, sum by (le, route) (rate(mre_http_request_duration_seconds_bucket[5m])))", "legendFormat": "{{route}}"}]
+    },
+    {
+      "id": 11, "type": "timeseries", "title": "Tokens by provider",
+      "gridPos": {"x": 0, "y": 28, "w": 12, "h": 8},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "targets": [{"expr": "sum by (provider, direction) (rate(mre_model_tokens_total[5m]))", "legendFormat": "{{provider}} {{direction}}"}]
+    },
+    {
+      "id": 12, "type": "timeseries", "title": "Content-control blocks",
+      "gridPos": {"x": 12, "y": 28, "w": 12, "h": 8},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "targets": [{"expr": "sum by (stage) (rate(mre_guard_blocks_total[10m]))", "legendFormat": "{{stage}}"}]
+    },
+    {
+      "id": 13, "type": "timeseries", "title": "Shadow outcomes",
+      "gridPos": {"x": 0, "y": 36, "w": 12, "h": 8},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "targets": [{"expr": "sum by (family, outcome) (increase(mre_shadow_comparisons_total{family=~\"$family\"}[1h]))", "legendFormat": "{{family}} {{outcome}}"}]
+    },
+    {
+      "id": 14, "type": "timeseries", "title": "Feedback, evaluations and promotions",
+      "gridPos": {"x": 12, "y": 36, "w": 12, "h": 8},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "targets": [
+        {"expr": "sum by (family) (increase(mre_feedback_total[1h]))", "legendFormat": "feedback {{family}}"},
+        {"expr": "sum by (status) (increase(mre_evaluation_runs_total[1h]))", "legendFormat": "evaluation {{status}}"},
+        {"expr": "sum by (status) (increase(mre_promotions_total[1h]))", "legendFormat": "promotion {{status}}"}
+      ]
+    },
+    {
+      "id": 15, "type": "timeseries", "title": "Authorization decisions",
+      "gridPos": {"x": 0, "y": 44, "w": 24, "h": 7},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "targets": [{"expr": "sum by (source, decision) (rate(mre_authorization_decisions_total[5m]))", "legendFormat": "{{source}} {{decision}}"}]
+    }
+  ]
+}
