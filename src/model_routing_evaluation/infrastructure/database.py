@@ -197,7 +197,7 @@ async def create_schema(engine: AsyncEngine) -> None:
     async with engine.begin() as conn:
         dialect = conn.dialect.name
         if dialect == "postgresql":
-            await conn.execute(text(f"SELECT pg_advisory_xact_lock({_SCHEMA_LOCK_ID})"))
+            await conn.execute(select(func.pg_advisory_xact_lock(_SCHEMA_LOCK_ID)))
         await conn.run_sync(metadata.create_all)
         statements = _POSTGRES_APPEND_ONLY if dialect == "postgresql" else _SQLITE_APPEND_ONLY
         if dialect in {"postgresql", "sqlite"}:
